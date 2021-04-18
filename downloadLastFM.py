@@ -6,12 +6,8 @@ Exports lastFM data as JSON files and merge them into a flat pandas.DataFrame.
 '''
 
 # to do:
-    # add keywords for multi-argument function calls
-        # str.replace(old=,new=)
-    # exception handler (hide traceback and don't kill process)
-        # based on logging level?
+    # exception handler (hide traceback and keep process alive) based on logging level?
     # determine if pagination is needed and set 'writeToDisk' flag in U.flattenDF() accordingly?
-    # multi-line import statement?
 
 # [Last.fm API Introduction](https://www.last.fm/api/intro)
 # [Tutorial: Getting Music Data with the Last.fm API using Python](https://www.dataquest.io/blog/last-fm-api-python/)
@@ -186,12 +182,15 @@ def recentDiscovery(entity:str='artist', weeksAgo:int=10, nWeeks:int=4, thr:int=
 class Examples:
     def lovedTracks(): return getReq(Param(method='user.getLovedTracks', lim=20))
     def friends(): return getReq(Param(method='user.getFriends', lim=10))
+    def getTopPersonalTag():
+        topTags = getReq(Param(method='user.getTopTags'))
+        return getReq(param=Param(method='user.getPersonalTags'), tag=topTags.loc[0,'tag_name'], taggingtype='artist')
     def topArtistsCountry(country:str='spain'): return getReq(param=Param(method='geo.getTopArtists', lim=10), country=country)
     def trackScrobbles(artist:str='opeth', track:str='windowpane'): # [https://github.com/pylast/pylast/issues/298]
         return getReq(Param(method='user.getTrackScrobbles', lim=20), artist=artist, track=track)
     def monthlyTrackChart(weeksAgo:int=4, nWeeks:int=4, **kwargs): return weeklyChart('user.getWeeklyTrackChart', weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs)
-    def weeklyAlbumChart(weeksAgo:int=1, **kwargs): return weeklyChart('user.getWeeklyAlbumChart', weeksAgo=weeksAgo, **kwargs)[['artist', 'album_name', 'album_playcount']]
-    def weeklyArtistChart(fr:str='2020-02-02', to:str='2020-05-05', thr:int=10): return weeklyChart('user.getWeeklyArtistChart', fr=fr, to=to, thr=thr)
+    def weeklyAlbumChart(weeksAgo:int=1, nWeeks:int=1, **kwargs): return weeklyChart('user.getWeeklyAlbumChart', weeksAgo=weeksAgo, **kwargs)[['artist', 'album_name', 'album_playcount']]
+    def weeklyArtistChart(weeksAgo:int=1, nWeeks:int=1, thr:int=10, **kwargs): return weeklyChart('user.getWeeklyArtistChart', **kwargs)
     def getAlbumDuration(artist:str='opeth', album:str='damnation'):
         albumInfo = getReq(Param(method='album.getInfo'), artist=artist, album=album)
         return sum(int(track.get('duration')) for track in albumInfo.get('tracks').get('track'))
@@ -199,9 +198,6 @@ class Examples:
         topArtist = getReq(Param(method='user.getTopArtists', period='7day', lim=1)).loc[0,'artist_name'] if 'artist' not in kwargs else kwargs.get('artist')
         logging.info(f"Similar artists to '{topArtist}':")
         return getReq(Param(method='artist.getSimilar', lim=10), artist=topArtist)
-    def getTopPersonalTag():
-        topTags = getReq(Param(method='user.getTopTags'))
-        return getReq(param=Param(method='user.getPersonalTags'), tag=topTags.loc[0,'tag_name'], taggingtype='artist')
     def findDuplicates(year:int=datetime.datetime.now().year, thr:int=600):
         recentTracks = loadUserData(Param(method='user.getRecentTracks', period=year))
         return recentTracks[recentTracks.groupby('track_name')['date_uts'].diff().abs().fillna(thr+1) < thr] # [https://stackoverflow.com/a/44779167/13019084]
