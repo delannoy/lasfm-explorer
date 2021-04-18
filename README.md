@@ -1,2 +1,2 @@
-# lasfm-explorer
-Python/Pandas wrapper for lastFM API to explore or export user data
+# lastfm-explorer
+Python/Pandas wrapper for lastFM API to explore or export user data.
