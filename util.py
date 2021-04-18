@@ -21,21 +21,6 @@ class C:
         grey, lred, lgreen, lyellow, lblue, lmagenta, lcyan, lwhite = [os.popen(f'tput setab {c}').read() for c in range(8,16)]
 
 
-class Cred:
-    '''Fetch user data from json file'''
-    filePath:str = f"{pathlib.Path.cwd().joinpath('cred.json')}"
-    try:
-        with open(file=filePath, mode='r') as jsonFile: credData = json.load(jsonFile)
-        user = credData.get('username')
-        apiKey = credData.get('apikey')
-        if user == 'your_username' or apiKey == 'your_api_key': raise Exception
-    except:
-        with open(file=filePath, mode='w') as jsonFile: jsonFile.write('{\n"username": "your_username",\n"apikey": "your_api_key"\n}')
-        logging.error(f"Please specify 'username' and 'apikey' in '{filePath}'")
-        logging.error(f"A LastFM API key can be obtained from [https://www.last.fm/api/authentication]")
-        sys.exit()
-
-
 class LogFmt(logging.Formatter):
     '''Custom logging formatter with color.'''
     # [https://docs.python.org/3/howto/logging-cookbook.html#customized-exception-formatting]
@@ -62,6 +47,22 @@ def logConfig(level:str='INFO'):
 
 logConfig(level='DEBUG')
 logging.getLogger('urllib3').setLevel(logging.INFO) # [https://stackoverflow.com/a/11029841/13019084]
+
+
+class Cred:
+    '''Fetch user data from json file'''
+    filePath:str = f"{pathlib.Path.cwd().joinpath('cred.json')}"
+    try:
+        with open(file=filePath, mode='r') as jsonFile: credData = json.load(jsonFile)
+        user = credData.get('username')
+        apiKey = credData.get('apikey')
+        if user == 'your_username' or apiKey == 'your_api_key': raise Exception
+    except:
+        with open(file=filePath, mode='w') as jsonFile: jsonFile.write('{\n"username": "your_username",\n"apikey": "your_api_key"\n}')
+        logging.error(f"Please specify 'username' and 'apikey' in '{filePath}'")
+        logging.error(f"A LastFM API key can be obtained from [https://www.last.fm/api/authentication]")
+        sys.exit()
+
 
 def timer(func:T.Callable) -> T.Callable:
     '''Timer decorator. Logs execution time for functions.'''
