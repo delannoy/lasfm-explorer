@@ -155,7 +155,7 @@ def weeklyChart(method:str='user.getWeeklyArtistChart', weeksAgo:int=4, nWeeks:i
     param = Param(method=method, fr=fr, to=to)
     # ts = getReq(Param(method='user.getWeeklyChartList'))[::-1].reset_index() # [https://www.last.fm/api/show/user.getWeeklyChartList]
     # DF = getReq(param=Param(method=method, fr=ts.loc[weeksAgo+nWeeks,'list_from'], to=ts.loc[weeksAgo,'list_to']))
-    DF = getReq(param=param)
+    DF = getReq(param=param, **kwargs)
     return DF[DF[f'{param.splitMethod(plural=False, strip=True)}_playcount'] >= thr]
 
 def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neighborThr:int=100, myThr:int=1000, **kwargs):
@@ -180,31 +180,33 @@ def recentDiscovery(entity:str='artist', weeksAgo:int=10, nWeeks:int=4, thr:int=
 
 @dataclasses.dataclass
 class Examples:
+    def getTopArtistTags(artist='opeth', **kwargs): return getReq(param=Param(method='artist.getTopTags'), artist=artist, **kwargs)
+    def topArtistsCountry(country:str='spain', **kwargs): return getReq(param=Param(method='geo.getTopArtists', lim=10), country=country, **kwargs)
+    def getTopSimilarArtist(artist:str, **kwargs):
+        topArtist = getReq(Param(method='user.getTopArtists', period='7day', lim=1)).loc[0,'artist_name'] if not artist else artist
+        logging.info(f"Similar artists to '{topArtist}':")
+        return getReq(Param(method='artist.getSimilar'), artist=topArtist, **kwargs)
+    def getAlbumDuration(artist:str='opeth', album:str='damnation'):
+        albumInfo = getReq(Param(method='album.getInfo'), artist=artist, album=album)
+        return sum(int(track.get('duration')) for track in albumInfo.get('tracks').get('track'))
     def lovedTracks(): return getReq(Param(method='user.getLovedTracks', lim=20))
     def friends(): return getReq(Param(method='user.getFriends', lim=10))
     def getTopPersonalTag():
         topTags = getReq(Param(method='user.getTopTags'))
         return getReq(param=Param(method='user.getPersonalTags'), tag=topTags.loc[0,'tag_name'], taggingtype='artist')
-    def topArtistsCountry(country:str='spain'): return getReq(param=Param(method='geo.getTopArtists', lim=10), country=country)
     def trackScrobbles(artist:str='opeth', track:str='windowpane'): # [https://github.com/pylast/pylast/issues/298]
         return getReq(Param(method='user.getTrackScrobbles', lim=20), artist=artist, track=track)
     def monthlyTrackChart(weeksAgo:int=4, nWeeks:int=4, **kwargs): return weeklyChart('user.getWeeklyTrackChart', weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs)
     def weeklyAlbumChart(weeksAgo:int=1, nWeeks:int=1, **kwargs): return weeklyChart('user.getWeeklyAlbumChart', weeksAgo=weeksAgo, **kwargs)[['artist', 'album_name', 'album_playcount']]
     def weeklyArtistChart(weeksAgo:int=1, nWeeks:int=1, thr:int=10, **kwargs): return weeklyChart('user.getWeeklyArtistChart', **kwargs)
-    def getAlbumDuration(artist:str='opeth', album:str='damnation'):
-        albumInfo = getReq(Param(method='album.getInfo'), artist=artist, album=album)
-        return sum(int(track.get('duration')) for track in albumInfo.get('tracks').get('track'))
-    def getTopSimilarArtist(**kwargs):
-        topArtist = getReq(Param(method='user.getTopArtists', period='7day', lim=1)).loc[0,'artist_name'] if 'artist' not in kwargs else kwargs.get('artist')
-        logging.info(f"Similar artists to '{topArtist}':")
-        return getReq(Param(method='artist.getSimilar', lim=10), artist=topArtist)
-    def findDuplicates(year:int=datetime.datetime.now().year, thr:int=600):
+    def findDuplicateScrobbles(year:int=datetime.datetime.now().year, thr:int=600):
         recentTracks = loadUserData(Param(method='user.getRecentTracks', period=year))
         return recentTracks[recentTracks.groupby('track_name')['date_uts'].diff().abs().fillna(thr+1) < thr] # [https://stackoverflow.com/a/44779167/13019084]
     def earliestListen(query:str, entity:str='artist'):
         myData = loadUserData(Param(method='user.getRecentTracks'))
         matches = myData[myData.get(entity).str.contains(query, case=False)]
         if len(matches): return matches.get('date').iloc[-1]
+
 
 def main():
     # downloadData(Param(method='user.getTopTracks', period='overall'))
