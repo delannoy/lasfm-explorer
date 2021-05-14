@@ -155,7 +155,7 @@ def weeklyChart(method:str='user.getWeeklyArtistChart', weeksAgo:int=4, nWeeks:i
     param = Param(method=method, fr=fr, to=to)
     # ts = getReq(Param(method='user.getWeeklyChartList'))[::-1].reset_index() # [https://www.last.fm/api/show/user.getWeeklyChartList]
     # DF = getReq(param=Param(method=method, fr=ts.loc[weeksAgo+nWeeks,'list_from'], to=ts.loc[weeksAgo,'list_to']))
-    DF = getReq(param=param, **kwargs)
+    DF = getReq(param=param)
     return DF[DF[f'{param.splitMethod(plural=False, strip=True)}_playcount'] >= thr]
 
 def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neighborThr:int=100, myThr:int=1000, **kwargs):
