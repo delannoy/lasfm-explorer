@@ -188,7 +188,7 @@ class Examples:
         return getReq(Param(method='artist.getSimilar'), artist=topArtist, **kwargs)
     def getAlbumDuration(artist:str='opeth', album:str='damnation'):
         albumInfo = getReq(Param(method='album.getInfo'), artist=artist, album=album)
-        return sum(int(track.get('duration')) for track in albumInfo.get('tracks').get('track'))
+        return sum(int(track.get('duration')) for track in albumInfo.get('tracks').get('track')) if not 'error' in albumInfo.keys() else albumInfo
     def lovedTracks(): return getReq(Param(method='user.getLovedTracks', lim=20))
     def friends(): return getReq(Param(method='user.getFriends', lim=10))
     def getTopPersonalTag():
