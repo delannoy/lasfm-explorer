@@ -22,7 +22,6 @@ import dataclasses, datetime, enlighten, io, json, logging, math, pandas, pathli
 
 @dataclasses.dataclass
 class Param:
-    '''Set API parameters.'''
     user:str = U.Cred.user
     apiKey:str = U.Cred.apiKey
     method:str = None
@@ -38,10 +37,12 @@ class Param:
     outFmt:str = 'feather' # [The Best Format to Save Pandas Data](https://towardsdatascience.com/the-best-format-to-save-pandas-data-414dca023e0d)
 
     def __post_init__(self):
+        '''Query all available API methods if one is not provided when class is instantiated.'''
         if not self.method:
             logging.error(f'Available LastFM API methods:')
             availableMethods = H.apiDocs()
-            logging.error(f"For more info/documentation, run:\n>>> H.apiDocs('api.method')")
+            logging.error(f'For more info/documentation, run:')
+            logging.error('>>> H.apiDocs(api.method)')
             sys.exit()
 
     def requestParams(self, **kwargs) -> T.Dict[str,T.Union[str,int]]:
@@ -56,7 +57,7 @@ class Param:
         return {**rParams, **kwargs}
 
     def splitMethod(self, plural:bool=True, lower=False, strip=False) -> str:
-        '''Split {method} at the '.', strip 'get', strip trailing 's' if {plural} is True, convert to lowercase if {lower} is True, and strip {substr} if {strip} is True'''
+        '''Split {method} at the '.' and strip 'get'. If {plural} is False, strip trailing 's'. If {lower} is True, convert to lowercase. If {strip} is True, strip {substr}.'''
         method = self.method.lower() if lower else self.method
         (_,method) = method.split('.')
         method = method.replace('get','') if plural else method.replace('get','').rstrip('s')
@@ -65,7 +66,7 @@ class Param:
         return method
 
     def filePath(self, glob:str=None, ext:str='', reverse:bool=False, **kwargs) -> T.Union[str,T.List[str]]:
-        '''Return path for output files.'''
+        '''Output file path. If {glob} is True, return list of matching files.'''
         method = self.splitMethod(self)
         period = kwargs.get('period', self.period)
         filepath = f"{method}/{self.user}.{method}.{period}{ext}"
@@ -74,7 +75,7 @@ class Param:
 
 
 def getReq(param:Param, pbarManager:enlighten._manager.Manager=enlighten.get_manager(enabled=False), collapse:bool=True, **kwargs) -> T.Dict[str,T.Any]:
-    '''Fetch request with optional enlighten progress bar. Additional request parameters may be provided via {kwargs}'''
+    '''Fetch request with optional enlighten progress bar. Additional request parameters may be provided via {kwargs}.'''
     # [https://stackoverflow.com/a/63832993/13019084]
     endpoint = 'http://ws.audioscrobbler.com/2.0/'
     header = {'User-Agent': 'delannoy/0.0.1 (a@delannoy.cc)'}
@@ -102,7 +103,7 @@ def getReq(param:Param, pbarManager:enlighten._manager.Manager=enlighten.get_man
     return resp
 
 def downloadData(param:Param, download:bool=True):
-    '''Download lastFM data for the given {param.method} and {param.period} to json files, merge them into a flat pandas.DataFrame, and write it to disk'''
+    '''Download user data (if {download} is True) to json files, merge them into a flat pandas.DataFrame, and write it to disk.'''
     logging.info(f"{param.filePath().name.replace('.','|')}")
     if download:
         subMethod = param.splitMethod(lower=True)
@@ -142,7 +143,8 @@ def exportScrobbles():
     downloadData(Param(method='user.getRecentTracks', period=currentYear, fr=f'{currentYear}-01-01 00:00:00', to=f'{currentYear}-12-31 23:59:59'))
     U.mergeRecentTracks(param)
 
-def loadUserData(param):
+def loadUserData(param) -> pandas.DataFrame:
+    '''Read user data from disk (download if needed).'''
     try: myData = U.pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
     except FileNotFoundError:
         downloadData(param)
@@ -158,7 +160,8 @@ def weeklyChart(method:str='user.getWeeklyArtistChart', weeksAgo:int=4, nWeeks:i
     DF = getReq(param=param)
     return DF[DF[f'{param.splitMethod(plural=False, strip=True)}_playcount'] >= thr]
 
-def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neighborThr:int=100, myThr:int=1000, **kwargs):
+def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neighborThr:int=100, myThr:int=1000, **kwargs) -> pandas.DataFrame:
+    '''Return neighbor's top artists/albums/songs missing from the user's top listens'''
     if not neighbor: return H.lastfmNeighbors()
     else:
         myData = loadUserData(Param(method=method)).head(myThr)
@@ -170,13 +173,27 @@ def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neigh
         # numpy.setdiff1d(neighborData.get(f'{entity}_name'), myData.get(f'{entity}_name')) # [https://stackoverflow.com/a/58544291/13019084]
         return neighborData[[item not in myData.get(f'{entity}_name').to_list() for item in neighborData.get(f'{entity}_name').to_list()]][cols]
 
-def recentDiscovery(entity:str='artist', weeksAgo:int=10, nWeeks:int=4, thr:int=10, **kwargs):
+def recentDiscovery(entity:str='artist', weeksAgo:int=10, nWeeks:int=4, thr:int=10, **kwargs) -> T.List(str):
+    '''Return artist/album/track_name listens that are not present in listening history before query period.'''
     (fr,to) = U.dateRange(weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs)
     param = Param(method='user.getRecentTracks', fr=fr, to=to)
     myData = loadUserData(param)
     query = myData[(myData.date_uts > U.toUnixTime(param.fr)) & (myData.date_uts < U.toUnixTime(param.to))].get(entity).unique()
     beforeQuery = myData[(myData.date_uts < U.toUnixTime(param.fr))].get(entity).unique()
     return [item for item in query if item not in beforeQuery]
+
+def forgottenAlbums(earlierYear:int=datetime.datetime.now().year-2, laterYear:int=datetime.datetime.now().year-1, minThr:int=50, maxThr:int=10) -> pandas.DataFrame:
+    '''Return albums with many listens during {earlierYear} but few listens during {laterYear}.'''
+    def filterAlbumScrobbles(scrobbles:pandas.DataFrame, year:int, thr:int, bound:str):
+        yearScrobbles = scrobbles[(scrobbles.date >= f'{year}-01-01') & (scrobbles.date <= f'{year}-12-31')]
+        yearAlbumFreq = yearScrobbles[['artist','album']].value_counts() # [https://blog.softhints.com/pandas-how-to-filter-results-of-value_counts/]
+        if bound == 'lower': yearAlbumFreq = yearAlbumFreq[yearAlbumFreq >= thr]
+        if bound == 'upper': yearAlbumFreq = yearAlbumFreq[yearAlbumFreq <= thr]
+        return yearAlbumFreq.rename(f'scrobbles{year}').reset_index()
+    scrobbles = loadUserData(Param(method='user.getRecentTracks'))
+    prev = filterAlbumScrobbles(scrobbles, year=earlierYear, thr=minThr, bound='lower')
+    later = filterAlbumScrobbles(scrobbles, year=laterYear, thr=maxThr, bound='upper')
+    return pandas.merge(prev, later, on=['artist','album'])
 
 @dataclasses.dataclass
 class Examples:
@@ -206,7 +223,6 @@ class Examples:
         myData = loadUserData(Param(method='user.getRecentTracks'))
         matches = myData[myData.get(entity).str.contains(query, case=False)]
         if len(matches): return matches.get('date').iloc[-1]
-
 
 def main():
     # downloadData(Param(method='user.getTopTracks', period='overall'))
