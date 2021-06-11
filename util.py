@@ -50,14 +50,14 @@ logging.getLogger('urllib3').setLevel(logging.INFO) # [https://stackoverflow.com
 
 
 class Cred:
-    '''Fetch user data from json file'''
+    '''Fetch user data from json file.'''
     filePath:str = f"{pathlib.Path.cwd().joinpath('cred.json')}"
     try:
         with open(file=filePath, mode='r') as jsonFile: credData = json.load(jsonFile)
         user = credData.get('username')
         apiKey = credData.get('apikey')
         if user == 'your_username' or apiKey == 'your_api_key': raise Exception
-    except:
+    except (FileNotFoundError, Exception):
         with open(file=filePath, mode='w') as jsonFile: jsonFile.write('{\n"username": "your_username",\n"apikey": "your_api_key"\n}')
         logging.error(f"Please specify 'username' and 'apikey' in '{filePath}'")
         logging.error(f"A LastFM API key can be obtained from [https://www.last.fm/api/authentication]")
@@ -169,6 +169,14 @@ def pandasWrite(param, df:pandas.DataFrame, outFile:str):
     '''Write {df} to disk in {fmt} format.'''
     outFile.unlink(missing_ok=True)
     getattr(df, f'to_{param.outFmt}')(outFile) # [https://stackoverflow.com/a/3071/13019084]
+
+def loadUserData(param) -> pandas.DataFrame:
+    '''Read user data from disk (download if needed).'''
+    try: myData = pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
+    except FileNotFoundError:
+        downloadData(param)
+        myData = pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
+    return myData
 
 @timer
 def writeCSV(param, df:pandas.DataFrame):

@@ -143,14 +143,6 @@ def exportScrobbles():
     downloadData(Param(method='user.getRecentTracks', period=currentYear, fr=f'{currentYear}-01-01 00:00:00', to=f'{currentYear}-12-31 23:59:59'))
     U.mergeRecentTracks(param)
 
-def loadUserData(param) -> pandas.DataFrame:
-    '''Read user data from disk (download if needed).'''
-    try: myData = U.pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
-    except FileNotFoundError:
-        downloadData(param)
-        myData = U.pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
-    return myData
-
 def weeklyChart(method:str='user.getWeeklyArtistChart', weeksAgo:int=4, nWeeks:int=1, thr:int=6, **kwargs) -> pandas.DataFrame:
     '''Fetch data for {user.getWeekly*Chart} methods.'''
     (fr,to) = U.dateRange(weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs)
@@ -164,7 +156,7 @@ def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neigh
     '''Return neighbor's top artists/albums/songs missing from the user's top listens'''
     if not neighbor: return H.lastfmNeighbors()
     else:
-        myData = loadUserData(Param(method=method)).head(myThr)
+        myData = U.loadUserData(Param(method=method)).head(myThr)
         param = Param(method=method, user=neighbor, lim=neighborThr)
         entity = param.splitMethod(lower=True, plural=False, strip=True)
         neighborData = getReq(param)
@@ -173,12 +165,13 @@ def recommFromNeighbor(neighbor:str=None, method:str='user.getTopArtists', neigh
         # numpy.setdiff1d(neighborData.get(f'{entity}_name'), myData.get(f'{entity}_name')) # [https://stackoverflow.com/a/58544291/13019084]
         return neighborData[[item not in myData.get(f'{entity}_name').to_list() for item in neighborData.get(f'{entity}_name').to_list()]][cols]
 
-def recentDiscovery(entity:str='artist', weeksAgo:int=10, nWeeks:int=4, thr:int=10, **kwargs) -> T.List(str):
+def recentDiscovery(entity:str='artist', weeksAgo:int=25, nWeeks:int=4, thr:int=10, **kwargs) -> T.List(str):
     '''Return artist/album/track_name listens that are not present in listening history before query period.'''
     (fr,to) = U.dateRange(weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs)
     param = Param(method='user.getRecentTracks', fr=fr, to=to)
-    myData = loadUserData(param)
-    query = myData[(myData.date_uts > U.toUnixTime(param.fr)) & (myData.date_uts < U.toUnixTime(param.to))].get(entity).unique()
+    myData = U.loadUserData(param)
+    query = myData[(myData.date_uts > U.toUnixTime(param.fr)) & (myData.date_uts < U.toUnixTime(param.to))].get(entity).value_counts()
+    query = query[query >= thr].index
     beforeQuery = myData[(myData.date_uts < U.toUnixTime(param.fr))].get(entity).unique()
     return [item for item in query if item not in beforeQuery]
 
@@ -190,7 +183,7 @@ def forgottenAlbums(earlierYear:int=datetime.datetime.now().year-2, laterYear:in
         if bound == 'lower': yearAlbumFreq = yearAlbumFreq[yearAlbumFreq >= thr]
         if bound == 'upper': yearAlbumFreq = yearAlbumFreq[yearAlbumFreq <= thr]
         return yearAlbumFreq.rename(f'scrobbles{year}').reset_index()
-    scrobbles = loadUserData(Param(method='user.getRecentTracks'))
+    scrobbles = U.loadUserData(Param(method='user.getRecentTracks'))
     prev = filterAlbumScrobbles(scrobbles, year=earlierYear, thr=minThr, bound='lower')
     later = filterAlbumScrobbles(scrobbles, year=laterYear, thr=maxThr, bound='upper')
     return pandas.merge(prev, later, on=['artist','album'])
@@ -206,6 +199,8 @@ class Examples:
     def getAlbumDuration(artist:str='opeth', album:str='damnation'):
         albumInfo = getReq(Param(method='album.getInfo'), artist=artist, album=album)
         return sum(int(track.get('duration')) for track in albumInfo.get('tracks').get('track')) if not 'error' in albumInfo.keys() else albumInfo
+    def getArtistListeners(artist:str='opeth'):
+        return int(getReq(Param(method='artist.getInfo'), artist=artist).get('stats').get('listeners'))
     def lovedTracks(): return getReq(Param(method='user.getLovedTracks', lim=20))
     def friends(): return getReq(Param(method='user.getFriends', lim=10))
     def getTopPersonalTag():
@@ -217,10 +212,10 @@ class Examples:
     def weeklyAlbumChart(weeksAgo:int=1, nWeeks:int=1, **kwargs): return weeklyChart('user.getWeeklyAlbumChart', weeksAgo=weeksAgo, **kwargs)[['artist', 'album_name', 'album_playcount']]
     def weeklyArtistChart(weeksAgo:int=1, nWeeks:int=1, thr:int=10, **kwargs): return weeklyChart('user.getWeeklyArtistChart', **kwargs)
     def findDuplicateScrobbles(year:int=datetime.datetime.now().year, thr:int=600):
-        recentTracks = loadUserData(Param(method='user.getRecentTracks', period=year))
+        recentTracks = U.loadUserData(Param(method='user.getRecentTracks', period=year))
         return recentTracks[recentTracks.groupby('track_name')['date_uts'].diff().abs().fillna(thr+1) < thr] # [https://stackoverflow.com/a/44779167/13019084]
     def earliestListen(query:str, entity:str='artist'):
-        myData = loadUserData(Param(method='user.getRecentTracks'))
+        myData = U.loadUserData(Param(method='user.getRecentTracks'))
         matches = myData[myData.get(entity).str.contains(query, case=False)]
         if len(matches): return matches.get('date').iloc[-1]
 
