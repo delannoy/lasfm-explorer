@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import util as U
-import typing as T # [https://realpython.com/python-type-checking/]
+from logFormat import C
+from util import Cred
+from typing import List
 import lxml.html, lxml.cssselect, os, pandas, requests
 
 csssel = lxml.cssselect.CSSSelector
@@ -22,14 +23,14 @@ def eTreeGet(url:str) -> lxml.html.HtmlElement:
     resp = requests.get(url=url, headers=headers).content
     return lxml.html.fromstring(resp)
 
-def lastfmNeighbors(user:str=U.Cred.user) -> pandas.DataFrame:
+def lastfmNeighbors(user:str=Cred.user) -> pandas.DataFrame:
     '''Parse lastFM neighbors page for {user}.'''
     eTree = eTreeGet(f'https://www.last.fm/user/{user}/neighbours')
     users = [user.text for user in csssel('a.user-list-link')(eTree)]
     artists = [[artist.text for artist in csssel('a')(user)] for user in csssel('p.user-list-shared-artists')(eTree)]
     return pandas.DataFrame({'user':users,'artistsInCommon':artists})
 
-def apiMethods() -> T.List[str]:
+def apiMethods() -> List[str]:
     '''Parse all available lastFM API methods.'''
     eTree = eTreeGet('https://www.last.fm/api')
     section = csssel('section.sidebar-group')(eTree)[2]
@@ -43,14 +44,14 @@ def apiDocs(method:str=None):
         '''Convert etree element to string, replace '<br/>' with '\n', and convert back to etree element.'''
         return lxml.html.fromstring(lxml.etree.tostring(node).decode("utf-8").replace('<br/>','\n'))
     def exampleURL(element:lxml.html.HtmlElement):
-        print(f'{U.C.uline}{listText(element)[0].strip()}{U.C.reset}')
+        print(f'{C.uline}{listText(element)[0].strip()}{C.reset}')
         k = csssel('strong')(div[idx+1])
         if v := csssel('a')(div[idx+1]):
             _ = [print(f"{k.text} {v.get('href')}") for k,v in zip(k,v)]
         elif v := [val for val in listText(div[idx+1]) if val.strip()]:
             _ = [print(f'{k.text} {v}') for k,v in zip(k,v)]
     def params(element:lxml.html.HtmlElement):
-        print(f'{U.C.uline}{listText(element)[0].strip()}{U.C.reset}')
+        print(f'{C.uline}{listText(element)[0].strip()}{C.reset}')
         _ = [print(param.strip()) for param in brTagNewLine(div[idx+1]).text_content().splitlines()]
         # k = csssel('strong')(div[idx+1])
         # v = [val for val in listText(div[idx+1]) if val.strip()]
@@ -62,17 +63,17 @@ def apiDocs(method:str=None):
         div = csssel('main div.content__default')(eTree)[0]
         for idx,element in enumerate(div):
             if element.tag == 'h1':
-                print(f'\n{U.C.uline}{U.C.F.green}{listText(element)[0].strip()}{U.C.reset}\n{div[idx+1].text}')
+                print(f'\n{C.uline}{C.F.green}{listText(element)[0].strip()}{C.reset}\n{div[idx+1].text}')
             if ' Example URLs' in listText(element):
                 exampleURL(element)
             if ' Params' in listText(element):
                 params(element)
             if ' Auth' in listText(element):
-                print(f'{U.C.uline}{listText(element)[0].strip()}{U.C.reset}')
+                print(f'{C.uline}{listText(element)[0].strip()}{C.reset}')
                 print(f'{div[idx+1].text_content()}')
             if ' Sample Response' in listText(element):
                 pass # this is too much work lol
             if ' Errors' in listText(element):
-                print(f'{U.C.uline}{listText(element)[0].strip()}{U.C.reset}')
+                print(f'{C.uline}{listText(element)[0].strip()}{C.reset}')
                 _ = [print(f'{item.text_content()}') for item in csssel('li')(div[idx+1])]
 

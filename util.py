@@ -1,57 +1,13 @@
 #!/usr/bin/env python3
 
 from __future__ import annotations # [https://www.python.org/dev/peps/pep-0563/]
-import typing as T # [https://realpython.com/python-type-checking/]
-import datetime, dateutil, functools, itertools, json, logging, os, pandas, pathlib, sys, timeit
-
-
-class C:
-    '''Manage text format and text via tput'''
-    # [https://stackoverflow.com/a/287944/13019084]
-    # [https://janakiev.com/blog/python-shell-commands/]
-    # [https://www.gnu.org/software/termutils/manual/termutils-2.0/html_chapter/tput_1.html]
-    reset = os.popen('tput sgr 0 0').read() # Turn off all attributes
-    bold = os.popen('tput bold').read() # Begin double intensity mode
-    uline = os.popen('tput smul').read() # Begin underscore mode
-    class F: # foreground
-        black, red, green, yellow, blue, magenta, cyan, white = [os.popen(f'tput setaf {c}').read() for c in range(0,8)]
-        grey, lred, lgreen, lyellow, lblue, lmagenta, lcyan, lwhite = [os.popen(f'tput setaf {c}').read() for c in range(8,16)]
-    class B: # background
-        black, red, green, yellow, blue, magenta, cyan, white = [os.popen(f'tput setab {c}').read() for c in range(0,8)]
-        grey, lred, lgreen, lyellow, lblue, lmagenta, lcyan, lwhite = [os.popen(f'tput setab {c}').read() for c in range(8,16)]
-
-
-class LogFmt(logging.Formatter):
-    '''Custom logging formatter with color.'''
-    # [https://docs.python.org/3/howto/logging-cookbook.html#customized-exception-formatting]
-    # [https://stackoverflow.com/a/56944256/13019084]
-    FORMATS = {
-        logging.DEBUG: f'{C.F.grey}[%(levelname)s] [%(message)s]{C.reset}',
-        logging.INFO: f'{C.F.grey}%(message)s{C.reset}',
-        logging.WARNING: f'{C.F.yellow}%(message)s{C.reset}',
-        logging.ERROR: f'{C.F.red}[%(levelname)s] [%(filename)s:%(lineno)d] [%(funcName)s()] [%(message)s]{C.reset}',
-        logging.CRITICAL: f'{C.B.red}{C.F.black}[%(levelname)s] [%(filename)s:%(lineno)d] [%(funcName)s()] [%(message)s]{C.reset}'
-    }
-    def format(self, record):
-        logFmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(logFmt)
-        return formatter.format(record)
-
-
-def logConfig(level:str='INFO'):
-    log = logging.getLogger()
-    handler = logging.StreamHandler()
-    handler.setFormatter(LogFmt())
-    log.addHandler(handler)
-    log.setLevel(level)
-
-logConfig(level='DEBUG')
-logging.getLogger('urllib3').setLevel(logging.INFO) # [https://stackoverflow.com/a/11029841/13019084]
+from typing import Any, Callable, Dict, List, Union
+import datetime, dateutil, functools, itertools, json, logging, pandas, pathlib, sys, timeit
 
 
 class Cred:
     '''Fetch user data from json file.'''
-    filePath:str = f"{pathlib.Path.cwd().joinpath('cred.json')}"
+    filePath:str = f"{pathlib.Path.cwd().joinpath('user.json')}"
     try:
         with open(file=filePath, mode='r') as jsonFile: credData = json.load(jsonFile)
         user = credData.get('username')
@@ -64,7 +20,7 @@ class Cred:
         sys.exit()
 
 
-def timer(func:T.Callable) -> T.Callable:
+def timer(func:Callable) -> Callable:
     '''Timer decorator. Logs execution time for functions.'''
     # [https://realpython.com/primer-on-python-decorators/]
     @functools.wraps(func)
@@ -76,7 +32,7 @@ def timer(func:T.Callable) -> T.Callable:
         return value
     return wrapper
 
-def toUnixTime(dt:T.Union[str,int], log:bool=False, **kwargs) -> int:
+def toUnixTime(dt:Union[str,int], log:bool=False, **kwargs) -> int:
     '''Convert {dt} (assumes UTC) to unix time.'''
     if isinstance(dt, str): dt = int(dateutil.parser.parse(str(dt)).replace(tzinfo=dateutil.tz.UTC).timestamp())
     if isinstance(dt, datetime.datetime): dt = int(dt.replace(tzinfo=dateutil.tz.UTC).timestamp())
@@ -100,9 +56,9 @@ def dateRange(weeksAgo:int, nWeeks:int, **kwargs) -> int:
         else: to = toUnixTime(dt=(datetime.datetime.utcfromtimestamp(fr) + datetime.timedelta(weeks=nWeeks)), **kwargs)
     return (fr,to)
 
-def collapseResp(resp:T.Dict[str,T.Any], ignoreKey:string='@attr', returnDF:bool=False, **kwargs) -> T.List[T.Dict[str,T.Any]]:
+def collapseResp(resp:Dict[str,Any], ignoreKey:string='@attr', returnDF:bool=False, **kwargs) -> List[Dict[str,Any]]:
     '''Traverse single keys in nested dictionary (ignoring {ignoreKey}) until reaching a list or muti-key dict.'''
-    def collapseOnlyKey(resp:T.Dict[str,T.Any]) -> T.Dict[str,T.Any]:
+    def collapseOnlyKey(resp:Dict[str,Any]) -> Dict[str,Any]:
         '''Return the contents of a dict if it has only one key.'''
         return resp.get(list(resp.keys())[0]) if len(resp.keys()) == 1 else resp
     while isinstance(resp, dict):
@@ -126,7 +82,7 @@ def loadJSON(param) -> pandas.DataFrame:
 
 def flattenCol(dfCol:pandas.Series, prefix:str=None) -> pandas.DataFrame:
     '''Flatten {dfCol} (pandas.Series) as needed and prepend {prefix} to {dfCol.name} (series/column name). Convert elements to integer if possible.'''
-    def fillNan(dfCol:pandas.Series, obj:T.Union[list,dict]): return dfCol.fillna({i: obj for i in dfCol.index}) # [https://stackoverflow.com/a/62689667/13019084]
+    def fillNan(dfCol:pandas.Series, obj:Union[list,dict]): return dfCol.fillna({i: obj for i in dfCol.index}) # [https://stackoverflow.com/a/62689667/13019084]
     def concatFlatCols(df:pandas.DataFrame): return pandas.concat(objs=[flattenCol(df[col]) for col in df], axis=1)
     if any(isinstance(row, list) for row in dfCol):
         # if dfCol contains list entries, fill any None/Nan values with empty list, flatten via dfCol.values.tolist(), and prepend {dfCol.name} to each column name
@@ -152,6 +108,10 @@ def flattenDF(param, DF:pandas.DataFrame, writeToDisk:bool=True) -> pandas.DataF
     if writeToDisk: pandasWrite(param=param, df=flatDF, outFile=param.filePath(ext=f'.{param.outFmt}'))
     return flatDF
 
+def shiftCols(df:pandas.DataFrame, firstCols=List[int]) -> pandas.Dataframe:
+    '''Shift {firstCols} to be left-most in {df}'''
+    return df[firstCols + [col for col in df.columns if col not in firstCols]]
+
 @timer
 def mergeRecentTracks(param):
     '''Merge individual-year {RecentTracks} serialized files into a single "overall" file.'''
@@ -170,17 +130,9 @@ def pandasWrite(param, df:pandas.DataFrame, outFile:str):
     outFile.unlink(missing_ok=True)
     getattr(df, f'to_{param.outFmt}')(outFile) # [https://stackoverflow.com/a/3071/13019084]
 
-def loadUserData(param) -> pandas.DataFrame:
-    '''Read user data from disk (download if needed).'''
-    try: myData = pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
-    except FileNotFoundError:
-        downloadData(param)
-        myData = pandasRead(param=param, inFile=f'{param.filePath()}.{param.outFmt}')
-    return myData
-
 @timer
 def writeCSV(param, df:pandas.DataFrame):
-    '''Write selected dataframe columns to csv.'''
+    '''Write subset of dataframe columns to csv.'''
     subMethod = param.splitMethod()
     # if sys.version_info < (3,8): outFile = param.filePath(ext='.csv')); outFile.unlink(missing_ok=True)
     (outFile := param.filePath(ext='.csv')).unlink(missing_ok=True)
