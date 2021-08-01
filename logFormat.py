@@ -5,9 +5,9 @@ import logging, os
 
 class C:
     '''Manage text format and text via tput'''
-    # [https://stackoverflow.com/a/287944/13019084]
-    # [https://janakiev.com/blog/python-shell-commands/]
-    # [https://www.gnu.org/software/termutils/manual/termutils-2.0/html_chapter/tput_1.html]
+    # [How to print colored text to the terminal?](https://stackoverflow.com/a/287944/13019084)
+    # [How to Execute Shell Commands with Python](https://janakiev.com/blog/python-shell-commands/)
+    # [tput: Portable Terminal Control](https://www.gnu.org/software/termutils/manual/termutils-2.0/html_chapter/tput_1.html)
     reset = os.popen('tput sgr 0 0').read() # Turn off all attributes
     bold = os.popen('tput bold').read() # Begin double intensity mode
     uline = os.popen('tput smul').read() # Begin underscore mode
@@ -21,8 +21,8 @@ class C:
 
 class LogFmt(logging.Formatter):
     '''Custom logging formatter with color.'''
-    # [https://docs.python.org/3/howto/logging-cookbook.html#customized-exception-formatting]
-    # [https://stackoverflow.com/a/56944256/13019084]
+    # [Customized exception formatting](https://docs.python.org/3/howto/logging-cookbook.html#customized-exception-formatting)
+    # [How can I color Python logging output?](https://stackoverflow.com/a/56944256/13019084)
     FORMATS = {
         logging.DEBUG: f'{C.F.grey}[%(levelname)s] [%(message)s]{C.reset}',
         logging.INFO: f'{C.F.grey}%(message)s{C.reset}',
@@ -44,4 +44,4 @@ def logConfig(level:str='INFO'):
     log.setLevel(level)
 
 logConfig(level='DEBUG')
-logging.getLogger('urllib3').setLevel(logging.INFO) # [https://stackoverflow.com/a/11029841/13019084]
+logging.getLogger('urllib3').setLevel(logging.INFO) # [How do I disable log messages from the Requests library?](https://stackoverflow.com/a/11029841/13019084)

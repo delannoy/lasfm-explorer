@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from __future__ import annotations # [https://www.python.org/dev/peps/pep-0563/]
+from __future__ import annotations # [PEP 563 -- Postponed Evaluation of Annotations](https://www.python.org/dev/peps/pep-0563/)
 from typing import Any, Callable, Dict, List, Union
 import datetime, dateutil, functools, itertools, json, logging, pandas, pathlib, sys, timeit
 
@@ -22,7 +22,7 @@ class Cred:
 
 def timer(func:Callable) -> Callable:
     '''Timer decorator. Logs execution time for functions.'''
-    # [https://realpython.com/primer-on-python-decorators/]
+    # [Primer on Python Decorators](https://realpython.com/primer-on-python-decorators/)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         t0      = timeit.default_timer()
@@ -73,7 +73,7 @@ def collapseResp(resp:Dict[str,Any], ignoreKey:string='@attr', returnDF:bool=Fal
 @timer
 def loadJSON(param) -> pandas.DataFrame:
     '''Append json data from files into a list of lists, then flatten the list, and return as a pandas.DataFrame.'''
-    # [https://realpython.com/python-itertools/#intermission-flattening-a-list-of-lists]
+    # [Intermission: Flattening A List of Lists](https://realpython.com/python-itertools/#intermission-flattening-a-list-of-lists)
     # if sys.version_info < (3,8): jsonFiles = param.filePath(glob='*json'); if jsonFiles: jsonListData = [json.load(open(file)) for file in jsonFiles]
     if (jsonFiles := param.filePath(glob='*json')): jsonListData = [json.load(open(file)) for file in jsonFiles]
     else: sys.exit(logging.error(f"No files found matching {param.filePath(ext='*json')}"))
@@ -82,12 +82,12 @@ def loadJSON(param) -> pandas.DataFrame:
 
 def flattenCol(dfCol:pandas.Series, prefix:str=None) -> pandas.DataFrame:
     '''Flatten {dfCol} (pandas.Series) as needed and prepend {prefix} to {dfCol.name} (series/column name). Convert elements to integer if possible.'''
-    def fillNan(dfCol:pandas.Series, obj:Union[list,dict]): return dfCol.fillna({i: obj for i in dfCol.index}) # [https://stackoverflow.com/a/62689667/13019084]
+    def fillNan(dfCol:pandas.Series, obj:Union[list,dict]): return dfCol.fillna({i: obj for i in dfCol.index}) # [How to fill dataframe Nan values with empty list [] in pandas?](https://stackoverflow.com/a/62689667/13019084)
     def concatFlatCols(df:pandas.DataFrame): return pandas.concat(objs=[flattenCol(df[col]) for col in df], axis=1)
     if any(isinstance(row, list) for row in dfCol):
         # if dfCol contains list entries, fill any None/Nan values with empty list, flatten via dfCol.values.tolist(), and prepend {dfCol.name} to each column name
         dfCol = fillNan(dfCol=dfCol, obj=[])
-        listDF = pandas.concat(objs=[pandas.DataFrame(dfCol.values.tolist()).add_prefix(f'{dfCol.name}_')], axis=1) # [https://stackoverflow.com/a/44821357/13019084]
+        listDF = pandas.concat(objs=[pandas.DataFrame(dfCol.values.tolist()).add_prefix(f'{dfCol.name}_')], axis=1) # [DataFrame Pandas - Flatten column of lists to multiple columns](https://stackoverflow.com/a/44821357/13019084)
         return concatFlatCols(listDF)
     elif any(isinstance(row, dict) for row in dfCol):
         # if dfCol contains dict entries, fill any None/Nan values with empty dict, flatten via pandas.json_normalize(), and prepend {dfCol.name} to each column name
@@ -123,12 +123,12 @@ def mergeRecentTracks(param):
 
 def pandasRead(param, inFile:str) -> pandas.DataFrame:
     '''Read {inFile} and return as a pandas.DataFrame.'''
-    return getattr(pandas, f'read_{param.outFmt}')(inFile) # [https://stackoverflow.com/a/3071/13019084]
+    return getattr(pandas, f'read_{param.outFmt}')(inFile) # [Calling a function of a module by using its name (a string)](https://stackoverflow.com/a/3071/13019084)
 
 def pandasWrite(param, df:pandas.DataFrame, outFile:str):
     '''Write {df} to disk in {fmt} format.'''
     outFile.unlink(missing_ok=True)
-    getattr(df, f'to_{param.outFmt}')(outFile) # [https://stackoverflow.com/a/3071/13019084]
+    getattr(df, f'to_{param.outFmt}')(outFile) # [Calling a function of a module by using its name (a string)](https://stackoverflow.com/a/3071/13019084)
 
 @timer
 def writeCSV(param, df:pandas.DataFrame):

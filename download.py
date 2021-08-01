@@ -4,7 +4,7 @@
 Export lastFM data as JSON files and merge them into a flat pandas.DataFrame.
 '''
 
-from __future__ import annotations # [https://www.python.org/dev/peps/pep-0563/]
+from __future__ import annotations # [PEP 563 -- Postponed Evaluation of Annotations](https://www.python.org/dev/peps/pep-0563/)
 from apiWrapper import Param, getReq
 from util import flattenDF, loadJSON, mergeRecentTracks, writeCSV
 import logFormat
@@ -23,7 +23,7 @@ def downloadData(param:Param, download:bool=True):
                 response = getReq(param=param, pbarManager=pbarManager, collapse=False)
                 param.page = int(response.get(subMethod).get('@attr').get('page'))
                 param.nPages = int(response.get(subMethod).get('@attr').get('totalPages'))
-                pbar.total = param.nPages # [https://stackoverflow.com/a/58961015/13019084]
+                pbar.total = param.nPages # [tqdm: update total without resetting time elapsed](https://stackoverflow.com/a/58961015/13019084)
                 pbar.update()
                 param.filePath().parent.mkdir(exist_ok=True)
                 with open(file=fileName, mode='w') as jsonF: json.dump(obj=response, fp=jsonF)
