@@ -86,8 +86,8 @@ class Examples:
     def trackScrobbles(artist:str='opeth', track:str='windowpane'): # [there is a new method user.getTrackScrobbles which is just like user.getArtistTracks, except also takes a "track" parameter](https://github.com/pylast/pylast/issues/298#issue-414708387)
         return getReq(Param(method='user.getTrackScrobbles', lim=20), artist=artist, track=track)
     def monthlyTrackChart(weeksAgo:int=4, nWeeks:int=4, **kwargs): return shiftCols(weeklyChart('user.getWeeklyTrackChart', weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs), ['artist','track_name','track_playcount'])
-    def weeklyAlbumChart(weeksAgo:int=1, nWeeks:int=1, **kwargs): return shiftCols(weeklyChart('user.getWeeklyAlbumChart', weeksAgo=weeksAgo, **kwargs), ['artist', 'album_name', 'album_playcount'])
-    def weeklyArtistChart(weeksAgo:int=1, nWeeks:int=1, thr:int=10, **kwargs): return shiftCols(weeklyChart('user.getWeeklyArtistChart', **kwargs), ['artist_name','artist_playcount'])
+    def weeklyAlbumChart(weeksAgo:int=1, nWeeks:int=1, **kwargs): return shiftCols(weeklyChart('user.getWeeklyAlbumChart', weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs), ['artist', 'album_name', 'album_playcount'])
+    def weeklyArtistChart(weeksAgo:int=1, nWeeks:int=1, **kwargs): return shiftCols(weeklyChart('user.getWeeklyArtistChart', weeksAgo=weeksAgo, nWeeks=nWeeks, **kwargs), ['artist_name','artist_playcount'])
     def findDuplicateScrobbles(year:int=datetime.datetime.now().year, thr:int=600):
         recentTracks = loadUserData(Param(method='user.getRecentTracks', period=year))
         return recentTracks[recentTracks.groupby('track_name')['date_uts'].diff().abs().fillna(thr+1) < thr] # [https://stackoverflow.com/a/44779167/13019084]

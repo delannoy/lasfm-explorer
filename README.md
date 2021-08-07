@@ -50,7 +50,7 @@ $ cat '/path/to/repo/lastfm-explorer/user.json'
 from explore import Examples
 Examples.monthlyTrackChart(weeksAgo=8, thr=4)
 Examples.weeklyAlbumChart(fr='2020-01-01', to='2020-02-01')
-Examples.weeklyArtistChart(weeksAgo='20', nWeeks=4)
+Examples.weeklyArtistChart(weeksAgo=20, nWeeks=4)
 Examples.trackScrobbles(artist='opeth', track='ghost of perdition')
 Examples.findDuplicateScrobbles()
 Examples.earliestListen(query='watershed', entity='album')
