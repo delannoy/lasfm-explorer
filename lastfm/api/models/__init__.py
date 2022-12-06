@@ -7,7 +7,7 @@ import pydantic
 
 def validateEmptyString(field: str) -> classmethod:
 
-    def nullEmptyString(val: str) -> typing.Optional[str]:
+    def nullEmptyString(val: typing.Any) -> typing.Any:
         '''Return `None` if `val` a literal "none" str or an empty str'''
         if isinstance(val, str) and (val.lower() == 'none' or not val.strip()):
             return None
