@@ -5,16 +5,16 @@ import typing
 
 import pydantic
 
-def validateEmptyString(field: str) -> classmethod:
+def validateEmptyField(field: typing.Any) -> classmethod:
 
-    def nullEmptyString(val: typing.Any) -> typing.Any:
+    def nullString(val: typing.Any) -> typing.Any:
         '''Return `None` if `val` a literal "none" str or an empty str'''
         if isinstance(val, str) and (val.lower() == 'none' or not val.strip()):
             return None
         else:
             return val
 
-    return pydantic.validator(field, pre=True, allow_reuse=True)(nullEmptyString)
+    return pydantic.validator(field, pre=True, allow_reuse=True)(nullString)
 
 
 class ImageSize(str, enum.Enum):
@@ -26,7 +26,7 @@ class ImageSize(str, enum.Enum):
 
 
 class BaseModel(pydantic.BaseModel, extra=pydantic.Extra.forbid):
-    _ = validateEmptyString('*')
+    _ = validateEmptyField('*')
 
 
 class AttrUser(BaseModel):
