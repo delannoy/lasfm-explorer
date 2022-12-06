@@ -8,11 +8,11 @@ import pydantic
 def validateEmptyString(field: str) -> classmethod:
 
     def nullEmptyString(val: str) -> typing.Optional[str]:
-        if not isinstance(val, str):
-            return val
-        if val.lower() == 'none':
+        '''Return `None` if `val` a literal "none" str or an empty str'''
+        if isinstance(val, str) and (val.lower() == 'none' or not val.strip()):
             return None
-        return val if val.strip() else None
+        else:
+            return val
 
     return pydantic.validator(field, pre=True, allow_reuse=True)(nullEmptyString)
 
@@ -26,7 +26,6 @@ class ImageSize(str, enum.Enum):
 
 
 class BaseModel(pydantic.BaseModel, extra=pydantic.Extra.forbid):
-
     _ = validateEmptyString('*')
 
 
