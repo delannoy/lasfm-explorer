@@ -2,6 +2,7 @@
 
 import enum
 
+
 class Errors(enum.IntEnum):
     '''https://www.last.fm/api/errorcodes'''
 
