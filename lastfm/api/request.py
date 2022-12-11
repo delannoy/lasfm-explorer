@@ -43,7 +43,7 @@ progress = rich.progress.Progress(
 def get(url: str = param.url, headers: dict[str, str] = param.headers, params: typ.json = param.default, **kwargs) -> typ.response:
     '''Wrapper function for `urllib.request.urlopen` GET requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
     url = f'{url}?{urllib.parse.urlencode({**params, **kwargs})}'
-    log.info(url)
+    log.debug(url)
     try:
         response = urllib.request.urlopen(urllib.request.Request(url, headers=headers))
         return json.loads(response.read().decode('utf-8'))
