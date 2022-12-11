@@ -2,6 +2,7 @@
 
 import enum
 import typing
+import uuid
 
 import pydantic
 
@@ -37,6 +38,21 @@ class AttrUser(BaseModel):
     total: int
 
 
+class Entity(BaseModel):
+    name: str
+    mbid: typing.Optional[uuid.UUID]
+    url: pydantic.HttpUrl
+
+
 class Image(BaseModel):
     size: typing.Optional[ImageSize]
     url: typing.Optional[pydantic.HttpUrl] = pydantic.Field(alias='#text')
+
+
+class Rank(BaseModel):
+    rank: int
+
+
+class Streamable(BaseModel):
+    fulltrack: bool
+    streamable: bool = pydantic.Field(alias='#text')
