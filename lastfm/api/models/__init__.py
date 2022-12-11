@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 
+import datetime
 import enum
 import typing
 import uuid
 
+import dateparser
 import pydantic
+
+def validateDateTime(field: str) -> classmethod:
+    # https://github.com/pydantic/pydantic/issues/940#issuecomment-569765091
+
+    def parseDateTime(dt: str) -> datetime.datetime:
+        return dateparser.parse(str(dt), settings={'TIMEZONE': 'UTC'}) # [Python 3.9 PytzUsageWarning](https://github.com/scrapinghub/dateparser/issues/1013#issuecomment-1109403189)
+
+    return pydantic.validator(field, pre=True, allow_reuse=True)(parseDateTime)
 
 def validateEmptyField(field: typing.Any) -> classmethod:
 
