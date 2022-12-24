@@ -40,6 +40,17 @@ class BaseModel(pydantic.BaseModel, extra=pydantic.Extra.forbid):
     _ = validateEmptyField('*')
 
 
+class AttrOpensearchQuery(BaseModel):
+    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    role: str
+    startPage: int
+    searchTerms: typing.Optional[str]
+
+
+class AttrQuery(BaseModel):
+    query: typing.Optional[str] = pydantic.Field(alias='for')
+
+
 class AttrUser(BaseModel):
     user: str
     page: int
@@ -66,3 +77,14 @@ class Rank(BaseModel):
 class Streamable(BaseModel):
     fulltrack: bool
     streamable: bool = pydantic.Field(alias='#text')
+
+
+class Tag(BaseModel):
+    name: str
+    url: pydantic.HttpUrl
+
+
+class TopTag(BaseModel):
+    name: str
+    url: pydantic.HttpUrl
+    count: int

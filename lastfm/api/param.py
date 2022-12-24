@@ -28,3 +28,13 @@ def required(func: typing.Callable = None) -> typing.Callable:
     def inner(**kwargs) -> typ.response:
         return func(method=f'{func.__module__}.{func.__name__}', api_key=secret.api_key, **kwargs)
     return inner
+
+def listToCSV(array: typ.array) -> str:
+    '''Convert each item in `array` into a string, remove any comma characters, and join into a comma-separated string'''
+    array = (str(item).replace(',', '') for item in array)
+    return str.join(',', array)
+
+def validate(check: bool, descr: str):
+    '''Raise `ValueError` with `descr` if `check` is `False`'''
+    if not check:
+        raise ValueError(descr)

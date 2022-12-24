@@ -8,7 +8,7 @@ import secret
 import typ
 
 @param.required
-@pydantic.validate_arguments # (config={'arbitrary_types_allowed': True})
+@pydantic.validate_arguments
 def getArtists(method: str, api_key: typ.UUID, user: str = secret.user, limit: int = 50, page: int = 1) -> typ.response:
     '''A paginated list of all the artists in a user's library, with play counts and tag counts.
         user    : Required : The user whose library you want to fetch.
