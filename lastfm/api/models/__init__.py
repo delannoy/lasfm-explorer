@@ -51,6 +51,14 @@ class AttrQuery(BaseModel):
     query: typing.Optional[str] = pydantic.Field(alias='for')
 
 
+class AttrArtist(BaseModel):
+    artist: str
+    page: int
+    perPage: int
+    totalPages: int
+    total: int
+
+
 class AttrUser(BaseModel):
     user: str
     page: int
