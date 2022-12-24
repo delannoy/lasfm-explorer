@@ -10,10 +10,10 @@ import urllib.request
 
 import rich.logging
 import rich.progress
+import pydantic
 
 import typ
 import errors
-import param
 
  # [Logging Handler](https://rich.readthedocs.io/en/stable/logging.html)
  # [rich.logging](https://rich.readthedocs.io/en/stable/reference/logging.html)
@@ -40,7 +40,7 @@ progress = rich.progress.Progress(
             expand=True, # Expand tasks table to fit width. Defaults to False.
             )
 
-def get(url: str = param.url, headers: dict[str, str] = param.headers, params: typ.json = param.default, **kwargs) -> typ.response:
+def get(url: str, headers: typ.json = pydantic.Field(default_factory=dict), params: typ.json = pydantic.Field(default_factory=dict), **kwargs) -> typ.response:
     '''Wrapper function for `urllib.request.urlopen` GET requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
     url = f'{url}?{urllib.parse.urlencode({**params, **kwargs})}'
     log.debug(url)
@@ -76,7 +76,7 @@ def json_error(error: json.JSONDecodeError):
     log.debug(f'{error.pos = }')
     return log.error(f'json.JSONDecodeError: {error}')
 
-def download(filepath: pathlib.Path, url: str = param.url, headers: dict[str, str] = param.headers, params: typ.json = param.default, **kwargs) -> None:
+def download(filepath: pathlib.Path, url: str, headers: typ.json = pydantic.Field(default_factory=dict), params: typ.json = pydantic.Field(default_factory=dict), **kwargs) -> None:
     '''Wrapper function to download the response to a GET request with a `rich` progress bar.'''
     # https://github.com/Textualize/rich/blob/master/examples/downloader.py
     url = f'{url}?{urllib.parse.urlencode({**params, **kwargs})}'
