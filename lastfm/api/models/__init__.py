@@ -59,6 +59,14 @@ class AttrArtist(BaseModel):
     total: int
 
 
+class AttrTag(BaseModel):
+    tag: str
+    page: int
+    perPage: int
+    totalPages: int
+    total: int
+
+
 class AttrUser(BaseModel):
     user: str
     page: int
