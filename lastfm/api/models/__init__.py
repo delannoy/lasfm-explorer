@@ -36,6 +36,11 @@ class ImageSize(str, enum.Enum):
     MEGA = 'mega'
 
 
+class UserType(enum.Enum):
+    USER: str = 'user'
+    SUBCRIBER: str = 'subscriber'
+
+
 class BaseModel(pydantic.BaseModel, extra=pydantic.Extra.forbid):
     _ = validateEmptyField('*')
 
@@ -75,10 +80,27 @@ class AttrUser(BaseModel):
     total: int
 
 
+class AttrWeekly(BaseModel):
+    user: str
+    fr: int = pydantic.Field(alias='from')
+    to: int
+
+
+class Date(BaseModel):
+    uts: int
+    dateTime: datetime.datetime = pydantic.Field(alias='#text')
+    _ = validateDateTime('dateTime')
+
+
 class Entity(BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
+
+
+class GenericEntity(BaseModel):
+    name: str = pydantic.Field(alias='#text')
+    mbid: typing.Optional[uuid.UUID]
 
 
 class Image(BaseModel):
@@ -88,6 +110,12 @@ class Image(BaseModel):
 
 class Rank(BaseModel):
     rank: int
+
+
+class Registered(BaseModel):
+    unixtime: int
+    dateTime: datetime.datetime = pydantic.Field(alias='#text')
+    _ = validateDateTime('dateTime')
 
 
 class Streamable(BaseModel):
