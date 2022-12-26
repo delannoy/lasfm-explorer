@@ -19,8 +19,8 @@ def validateDateTime(field: str) -> classmethod:
 def validateEmptyField(field: typing.Any) -> classmethod:
 
     def nullString(val: typing.Any) -> typing.Any:
-        '''Return `None` if `val` a literal "none" str or an empty str'''
-        if isinstance(val, str) and (val.lower() == 'none' or not val.strip()):
+        '''Return `None` if `val` is an empty string or a literal "none", "n/a", "fixme" string'''
+        if isinstance(val, str) and (val.lower() in ('none', 'n/a', 'fixme') or not val.strip()):
             return None
         else:
             return val
