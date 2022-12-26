@@ -21,6 +21,7 @@ log_level = logging.DEBUG
 handler = rich.logging.RichHandler(rich_tracebacks=True, log_time_format="[%Y-%m-%d %H:%M:%S]")
 logging.basicConfig(level=log_level, format='%(message)s', handlers=[handler])
 log = logging.getLogger()
+logging.getLogger('parso').setLevel(logging.WARNING) # https://github.com/ipython/ipython/issues/10946#issuecomment-568336466
 
 # [Progress Display](https://rich.readthedocs.io/en/stable/progress.html)
 # [rich.progress.Progress](https://rich.readthedocs.io/en/stable/reference/progress.html#rich.progress.Progress)
