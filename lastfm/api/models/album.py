@@ -40,8 +40,8 @@ class Album(models.BaseModel):
     url: pydantic.HttpUrl
     image: typing.List[models.Image]
     artist: str
-    tracks: Tracks
-    tags: TrackTags
+    tracks: typing.Optional[Tracks]
+    tags: typing.Optional[TrackTags]
     listeners: int
     playcount: int
     userplaycount: int
