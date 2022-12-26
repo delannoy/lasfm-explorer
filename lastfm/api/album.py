@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import uuid
+
 import typ
 import auth
 import param
@@ -25,7 +27,7 @@ def addTags(method: str, api_key: typ.UUID, artist: str, album: str, tags: typ.t
 
 @param.required
 @pydantic.validate_arguments
-def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: typ.UUID = None, user: str = secret.user, autocorrect: int = 0, lang: typ.lang = 'eng') -> typ.response:
+def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0, lang: typ.lang = 'eng') -> typ.response:
     '''Get the metadata and tracklist for an album on Last.fm using the album name or a musicbrainz id.
         artist      : Required [unless mbid] : The artist name
         album       : Required [unless mbid] : The album name
@@ -39,7 +41,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = Non
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
-def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: typ.UUID = None, user: str = secret.user, autocorrect: int = 0) -> typ.response:
+def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0) -> typ.response:
     '''Get the tags applied by an individual user to an album on Last.fm. To retrieve the list of top tags applied to an album by all users use `album.getTopTags`.
         artist      : Required [unless mbid] : The artist name
         album       : Required [unless mbid] : The album name
@@ -53,7 +55,7 @@ def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = Non
 
 @param.required
 @pydantic.validate_arguments
-def getTopTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: typ.UUID = None, autocorrect: int = 0) -> typ.response:
+def getTopTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, autocorrect: int = 0) -> typ.response:
     '''Get the top tags for an album on Last.fm, ordered by popularity.
         artist      : Required [unless mbid] : The artist name
         album       : Required [unless mbid] : The album name
