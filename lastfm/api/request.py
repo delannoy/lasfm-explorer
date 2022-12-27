@@ -43,10 +43,14 @@ progress = rich.progress.Progress(
 
 def get(url: str, headers: typ.json = pydantic.Field(default_factory=dict), params: typ.json = pydantic.Field(default_factory=dict), **kwargs) -> typ.response:
     '''Wrapper function for `urllib.request.urlopen` GET requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
-    url = f'{url}?{urllib.parse.urlencode({**params, **kwargs})}'
-    log.debug(url)
+    data = urllib.parse.urlencode({**params, **kwargs})
+    log.debug(f'{url}?{data}')
     try:
-        response = urllib.request.urlopen(urllib.request.Request(url, headers=headers))
+        if params.get('method') in ('track.love', 'track.unlove', 'track.scrobble', 'track.updateNowPlaying'):
+            request = urllib.request.Request(url=url, data=data.encode('utf-8'), headers=headers)
+        else:
+            request = urllib.request.Request(url=f'{url}?{data}', headers=headers)
+        response = urllib.request.urlopen(request)
         return json.loads(response.read().decode('utf-8'))
     except json.JSONDecodeError as error:
         json_error(error=error)
@@ -60,13 +64,13 @@ def http_error(error: urllib.error.HTTPError):
     log.debug(f'{dict(error.headers) = }')
     response = error.read().decode('utf-8')
     if not 'json' in error.headers.get('Content-Type'):
-        return log.error(response)
+        return log.error(f'{response = }')
     response = json.loads(response)
-    if not response.get('error') in {e.value for e in errors.Errors}:
-        return log.error(response)
-    error_enum = errors.Errors(response.get('error'))
-    log.error(error_enum.name)
-    log.error(error_enum.__doc__)
+    if response.get('error') in {e.value for e in errors.Errors}:
+        error_enum = errors.Errors(response.get('error'))
+        log.error(f'{error_enum.name = }')
+        log.error(f'{error_enum.__doc__ = }')
+    log.error(f'{response = }')
 
 def json_error(error: json.JSONDecodeError):
     '''Log `json.JSONDecodeError`.'''
