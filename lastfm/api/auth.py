@@ -30,7 +30,7 @@ def getMobileSession(method: str, api_key: typ.UUID, username: str, password: st
         api_sig  : Required : A Last.fm method signature. See authentication for more information.
         api_key  : Required : A Last.fm API key.
     '''
-    api_sig = auth.calculate_api_sig(param.params(locals()))
+    api_sig = calculate_api_sig(param.params(locals()))
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -41,7 +41,7 @@ def getSession(method: str, api_key: typ.UUID, token: str, api_sig: typ.UUID = N
         api_sig : Required : A Last.fm method signature. See authentication for more information.
         api_key : Required : A Last.fm API key.
     '''
-    api_sig = auth.calculate_api_sig(param.params(locals()))
+    api_sig = calculate_api_sig(param.params(locals()))
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -51,7 +51,7 @@ def getToken(method: str, api_key: typ.UUID, api_sig: typ.UUID = None) -> str:
         api_sig : Required : A Last.fm method signature. See authentication for more information.
         api_key : Required : A Last.fm API key.
     '''
-    api_sig = auth.calculate_api_sig(param.params(locals()))
+    api_sig = calculate_api_sig(param.params(locals()))
     response = request.get(url=param.url, headers=param.headers, params=param.params(locals()))
     logging.info(f'Please authorize application access from browser: http://www.last.fm/api/auth/?api_key={secret.api_key}&token={response.get("token")}')
     return response.get('token')
