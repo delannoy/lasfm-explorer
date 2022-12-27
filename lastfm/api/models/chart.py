@@ -37,20 +37,13 @@ class Artists(models.BaseModel):
 '''chart.getTopTags'''
 
 
-class Wiki(models.BaseModel):
-    published: typing.Optional[datetime.datetime]
-    summary: typing.Optional[str]
-    content: typing.Optional[str]
-    _ = models.validateDateTime('published')
-
-
 class Tag(models.BaseModel):
     name: str
     url: pydantic.HttpUrl
     taggings: int
     reach: int
     streamable: bool
-    wiki: Wiki
+    wiki: models.Wiki
 
 
 class Tags(models.BaseModel):

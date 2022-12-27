@@ -15,16 +15,11 @@ class Attr(models.BaseModel):
 '''tag.getInfo'''
 
 
-class Wiki(models.BaseModel):
-    summary: typing.Optional[str]
-    content: typing.Optional[str]
-
-
 class Tag(models.BaseModel):
     name: str
     total: int
     reach: int
-    wiki: Wiki
+    wiki: models.Wiki
 
 
 '''tag.getSimilar'''

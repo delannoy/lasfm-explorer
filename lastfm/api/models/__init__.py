@@ -132,3 +132,10 @@ class TopTag(BaseModel):
     name: str
     url: pydantic.HttpUrl
     count: int
+
+
+class Wiki(BaseModel):
+    published: typing.Optional[datetime.datetime]
+    summary: typing.Optional[str]
+    content: typing.Optional[str]
+    _ = validateDateTime('published')
