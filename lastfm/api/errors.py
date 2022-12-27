@@ -40,3 +40,22 @@ class Errors(enum.IntEnum):
     SUSPENDED_API_KEY = (26, "API Key Suspended - This application is not allowed to make requests to the web services")
     DEPRECATED  = (27, "Deprecated - This type of request is no longer supported")
     RATE_LIMIT_EXCEEDED = (29, "Rate Limit Exceded - Your IP has made too many requests in a short period, exceeding our API guidelines")
+
+
+class ScrobbleErrors(enum.IntEnum):
+    '''https://www.last.fm/api/show/track.scrobble'''
+
+    def __new__(cls, value: int, doc: str = ''):
+        '''override Enum.__new__ to take a doc argument'''
+        # [How can I attach documentation to members of a python enum?](https://stackoverflow.com/a/50473952)
+        self = int.__new__(cls, value)
+        self._value_ = value
+        self.__doc__ = doc
+        return self
+
+    OK = (0, '')
+    ARTIST_IGNORED = (1, "Artist was ignored")
+    TRACK_IGNORED = (2, "Track was ignored")
+    OLD_TIMESTAMP = (3, "Timestamp was too old")
+    NEW_TIMESTAMP = (4, "Timestamp was too new")
+    LIMIT_EXCEEDED = (5, "Daily scrobble limit exceeded")
