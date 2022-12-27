@@ -41,6 +41,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = Non
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
+@pydantic.validate_arguments
 def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0) -> typ.response:
     '''Get the tags applied by an individual user to an album on Last.fm. To retrieve the list of top tags applied to an album by all users use `album.getTopTags`.
         artist      : Required [unless mbid] : The artist name
@@ -67,6 +68,7 @@ def getTopTags(method: str, api_key: typ.UUID, artist: str = None, album: str = 
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
+@pydantic.validate_arguments
 def removeTag(method: str, api_key: typ.UUID, artist: str, album: str, tag: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
     '''Remove a user's tag from an album.
         artist  : Required : The artist name
@@ -80,6 +82,7 @@ def removeTag(method: str, api_key: typ.UUID, artist: str, album: str, tag: str,
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
+@pydantic.validate_arguments
 def search(method: str, api_key: typ.UUID, album: str, limit: int = 50, page: int = 1) -> typ.response:
     '''Search for an album by name. Returns album matches sorted by relevance.
         album   : Required : The album name
