@@ -34,6 +34,9 @@ def listToCSV(array: typ.array) -> str:
     array = (str(item).replace(',', '') for item in array)
     return str.join(',', array)
 
+def arrayParams(_locals: typ.json) -> typ.json:
+    return {f'{field}[{i}]': val for field, array in _locals.items() for i, val in enumerate(array)}
+
 def validate(check: bool, descr: str):
     '''Raise `ValueError` with `descr` if `check` is `False`'''
     if not check:

@@ -8,17 +8,6 @@ import xml.etree.ElementTree
 import dateparser
 import pydantic
 
-json = typing.Dict[str, typing.Any]
-xml = xml.etree.ElementTree.Element
-response = typing.Union[json, xml]
-
-# typevar = typing.TypeVar('typevar')
-# array = typing.Union[typing.List[typevar], typing.Set[typevar], typing.Tuple[typevar]]
-
-lang = pydantic.typing.Annotated[str, pydantic.Field(min_length=3, max_length=3)]
-tags = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=10)]
-# tags = pydantic.typing.Annotated[array[str], pydantic.Field(max_items=10)]
-
 
 class UnixTimestamp:
 
@@ -49,6 +38,7 @@ class UUID(uuid.UUID):
         return uuid.UUID(self.hex).hex
 
     def __repr__(self):
+        # return f'{self.__module__}.{self.__class__.__name__}(...)'
         return f'{self.__module__}.{self.__class__.__name__}({uuid.UUID.__str__(self)!r})'
 
     @classmethod
@@ -62,3 +52,27 @@ class UUID(uuid.UUID):
             return cls(v)
         else:
             return v
+
+
+json = typing.Dict[str, typing.Any]
+xml = xml.etree.ElementTree.Element
+response = typing.Union[json, xml]
+
+# typevar = typing.TypeVar('typevar')
+# array = typing.Union[typing.List[typevar], typing.Set[typevar], typing.Tuple[typevar]]
+
+lang = pydantic.typing.Annotated[str, pydantic.Field(min_length=3, max_length=3)]
+
+tags = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=10)]
+
+artist = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=50)]
+track = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=50)]
+timestamp = pydantic.typing.Annotated[typing.List[UnixTimestamp], pydantic.Field(max_items=50)]
+album = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=50)]
+mbid = pydantic.typing.Annotated[typing.List[uuid.UUID], pydantic.Field(max_items=50)]
+trackNumber = pydantic.typing.Annotated[typing.List[int], pydantic.Field(max_items=50)]
+albumArtist = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=50)]
+duration = pydantic.typing.Annotated[typing.List[int], pydantic.Field(max_items=50)]
+context = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=50)]
+streamId = pydantic.typing.Annotated[typing.List[str], pydantic.Field(max_items=50)]
+chosenByUser = pydantic.typing.Annotated[typing.List[bool], pydantic.Field(max_items=50)]
