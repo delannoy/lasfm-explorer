@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 
-from __future__ import annotations
 import functools
 import logging
-import uuid
+import typing
 
 import request
 import secret
@@ -29,7 +28,7 @@ def required(func: typing.Callable = None) -> typing.Callable:
         return func(method=f'{func.__module__}.{func.__name__}', api_key=secret.api_key, **kwargs)
     return inner
 
-def listToCSV(array: typ.array) -> str:
+def listToCSV(array: typing.List[str]) -> str:
     '''Convert each item in `array` into a string, remove any comma characters, and join into a comma-separated string'''
     array = (str(item).replace(',', '') for item in array)
     return str.join(',', array)
