@@ -9,6 +9,27 @@ import dateparser
 import pydantic
 
 
+class Bool():
+
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return f'{self.__module__}.{self.__class__.__name__}({self.value!r})'
+
+    def __str__(self):
+        return str(int(bool(self.value)))
+
+    @classmethod
+    def __get_validators__(cls):
+        # https://docs.pydantic.dev/usage/types/#custom-data-types
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v) -> int:
+        return int(pydantic.validators.bool_validator(v))
+
+
 class UnixTimestamp:
 
     def parseDateTime(dt: str, timezone: str = 'UTC') -> datetime.datetime:
@@ -38,7 +59,6 @@ class UUID(uuid.UUID):
         return uuid.UUID(self.hex).hex
 
     def __repr__(self):
-        # return f'{self.__module__}.{self.__class__.__name__}(...)'
         return f'{self.__module__}.{self.__class__.__name__}({uuid.UUID.__str__(self)!r})'
 
     @classmethod

@@ -35,7 +35,7 @@ def getCorrection(method: str, api_key: typ.UUID, artist: str,) -> typ.response:
 
 @param.required
 @pydantic.validate_arguments
-def getInfo(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0, lang: str = 'eng') -> typ.response:
+def getInfo(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0, lang: str = 'eng') -> typ.response:
     '''Get the metadata for an artist. Includes biography, truncated at 300 characters.
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -49,7 +49,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID 
 
 @param.required
 @pydantic.validate_arguments
-def getSimilar(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: int = 0, limit: int = 100) -> typ.response:
+def getSimilar(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: typ.Bool = 0, limit: int = 100) -> typ.response:
     '''Get all the artists similar to this artist
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -62,7 +62,7 @@ def getSimilar(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UU
 
 @param.required
 @pydantic.validate_arguments
-def getTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0) -> typ.response:
+def getTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the tags applied by an individual user to an artist on Last.fm. If accessed as an authenticated service /and/ you don't supply a user parameter then this service will return tags for the authenticated user. To retrieve the list of top tags applied to an artist by all users use artist.getTopTags.
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -75,7 +75,7 @@ def getTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID 
 
 @param.required
 @pydantic.validate_arguments
-def getTopAlbums(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: int = 0, limit: int = 50, page: int = 1) -> typ.response:
+def getTopAlbums(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: typ.Bool = 0, limit: int = 50, page: int = 1) -> typ.response:
     '''Get the top albums for an artist on Last.fm, ordered by popularity.
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -89,7 +89,7 @@ def getTopAlbums(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.
 
 @param.required
 @pydantic.validate_arguments
-def getTopTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: int = 0) -> typ.response:
+def getTopTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the top tags for an artist on Last.fm, ordered by popularity.
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -101,7 +101,7 @@ def getTopTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UU
 
 @param.required
 @pydantic.validate_arguments
-def getTopTracks(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: int = 0, limit: int = 50, page: int = 1) -> typ.response:
+def getTopTracks(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, autocorrect: typ.Bool = 0, limit: int = 50, page: int = 1) -> typ.response:
     '''Get the top tracks by an artist on Last.fm, ordered by popularity
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist

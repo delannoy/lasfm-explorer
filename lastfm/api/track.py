@@ -37,7 +37,7 @@ def getCorrection(method: str, api_key: typ.UUID, artist: str, track: str) -> ty
 
 @param.required
 @pydantic.validate_arguments
-def getInfo(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0) -> typ.response:
+def getInfo(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the metadata for a track on Last.fm using the artist/track name or a musicbrainz id.
         artist      : Required [unless mbid] : The artist name
         track       : Required [unless mbid] : The track name
@@ -52,7 +52,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, track: str = Non
 
 @param.required
 @pydantic.validate_arguments
-def getSimilar(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, autocorrect: int = 0, limit: int = 100) -> typ.response:
+def getSimilar(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, autocorrect: typ.Bool = 0, limit: int = 100) -> typ.response:
     '''Get the similar tracks for this track on Last.fm, based on listening data.
         track       : Required [unless mbid] : The track name
         artist      : Required [unless mbid] : The artist name
@@ -67,7 +67,7 @@ def getSimilar(method: str, api_key: typ.UUID, artist: str = None, track: str = 
 
 @param.required
 @pydantic.validate_arguments
-def getTags(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: int = 0) -> typ.response:
+def getTags(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the tags applied by an individual user to a track on Last.fm. To retrieve the list of top tags applied to a track by all users use track.getTopTags.
         artist      : Required [unless mbid] : The artist name
         track       : Required [unless mbid] : The track name
@@ -82,7 +82,7 @@ def getTags(method: str, api_key: typ.UUID, artist: str = None, track: str = Non
 
 @param.required
 @pydantic.validate_arguments
-def getTopTags(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, autocorrect: int = 0) -> typ.response:
+def getTopTags(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the top tags for this track on Last.fm, ordered by tag count. Supply either track & artist name or mbid.
         artist      : Required [unless mbid] : The artist name
         track       : Required [unless mbid] : The track name
