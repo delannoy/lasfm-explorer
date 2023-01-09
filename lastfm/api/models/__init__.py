@@ -98,8 +98,13 @@ class Entity(BaseModel):
     url: pydantic.HttpUrl
 
 
-class GenericEntity(BaseModel):
+class Artist(BaseModel):
     name: str = pydantic.Field(alias='#text')
+    mbid: typing.Optional[uuid.UUID]
+
+
+class Album(BaseModel):
+    name: typing.Optional[str] = pydantic.Field(alias='#text')
     mbid: typing.Optional[uuid.UUID]
 
 
