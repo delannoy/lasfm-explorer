@@ -10,6 +10,8 @@ import secret
 
 import pydantic
 
+param_validate_descr = '`artist` and `track` must be provided unless `mbid` is specified'
+
 @param.required
 @pydantic.validate_arguments
 def addTags(method: str, api_key: typ.UUID, artist: str, track: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
@@ -46,8 +48,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, track: str = Non
         autocorrect : Optional               : Transform misspelled artist and track names into correct artist and track names, returning the correct version instead. The corrected artist and track name will be returned in the response. [0|1]
         api_key     : Required               : A Last.fm API key.
     '''
-    assert (artist and track) or mbid, '`artist` and `track` must be provided unless `mbid` is specified'
-    autocorrect = int(autocorrect)
+    param.validate(check=((artist and track) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -61,8 +62,7 @@ def getSimilar(method: str, api_key: typ.UUID, artist: str = None, track: str = 
         limit       : Optional               : Maximum number of similar tracks to return
         api_key     : Required               : A Last.fm API key.
     '''
-    assert (artist and track) or mbid, '`artist` and `track` must be provided unless `mbid` is specified'
-    autocorrect = int(autocorrect)
+    param.validate(check=((artist and track) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -76,8 +76,7 @@ def getTags(method: str, api_key: typ.UUID, artist: str = None, track: str = Non
         autocorrect : Optional               : Transform misspelled artist and track names into correct artist and track names, returning the correct version instead. The corrected artist and track name will be returned in the response. [0|1]
         api_key     : Required               : A Last.fm API key.
     '''
-    assert (artist and track) or mbid, '`artist` and `track` must be provided unless `mbid` is specified'
-    autocorrect = int(autocorrect)
+    param.validate(check=((artist and track) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -90,8 +89,7 @@ def getTopTags(method: str, api_key: typ.UUID, artist: str = None, track: str = 
         autocorrect : Optional               : Transform misspelled artist and track names into correct artist and track names, returning the correct version instead. The corrected artist and track name will be returned in the response. [0|1]
         api_key     : Required               : A Last.fm API key.
     '''
-    assert (artist and track) or mbid, '`artist` and `track` must be provided unless `mbid` is specified'
-    autocorrect = int(autocorrect)
+    param.validate(check=((artist and track) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required

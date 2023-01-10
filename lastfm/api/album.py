@@ -10,6 +10,8 @@ import secret
 
 import pydantic
 
+param_validate_descr = '`artist` and `album` must be provided unless `mbid` is specified'
+
 @param.required
 @pydantic.validate_arguments
 def addTags(method: str, api_key: typ.UUID, artist: str, album: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
@@ -37,7 +39,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = Non
         lang        : Optional               : The language to return the biography in, expressed as an ISO 639 alpha-2 code.
         api_key     : Required               : A Last.fm API key.
     '''
-    param.validate(check=((artist and album) or mbid), descr='`artist` and `album` must be provided unless `mbid` is specified')
+    param.validate(check=((artist and album) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -51,7 +53,7 @@ def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = Non
         autocorrect : Optional               : Transform misspelled artist names into correct artist names, returning the correct version instead. The corrected artist name will be returned in the response. [0|1]
         api_key     : Required               : A Last.fm API key.
     '''
-    param.validate(check=((artist and album) or mbid), descr='`artist` and `album` must be provided unless `mbid` is specified')
+    param.validate(check=((artist and album) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
@@ -64,7 +66,7 @@ def getTopTags(method: str, api_key: typ.UUID, artist: str = None, album: str = 
         autocorrect : Optional               : Transform misspelled artist names into correct artist names, returning the correct version instead. The corrected artist name will be returned in the response. [0|1]
         api_key     : Required               : A Last.fm API key.
     '''
-    param.validate(check=((artist and album) or mbid), descr='`artist` and `album` must be provided unless `mbid` is specified')
+    param.validate(check=((artist and album) or mbid), descr=param_validate_descr)
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
