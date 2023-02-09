@@ -3,7 +3,6 @@
 import enum
 
 import typ
-import auth
 import param
 import request
 import secret

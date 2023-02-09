@@ -3,7 +3,6 @@
 import typ
 import param
 import request
-import secret
 
 import pydantic
 

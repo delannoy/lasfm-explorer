@@ -4,7 +4,6 @@ import functools
 import logging
 import typing
 
-import request
 import secret
 import typ
 
