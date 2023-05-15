@@ -5,10 +5,10 @@ import uuid
 
 import pydantic
 
-import models
+from api.models import common
 
 
-class Attr(models.BaseModel):
+class Attr(common.BaseModel):
     artist: str
     album: str
 
@@ -16,29 +16,29 @@ class Attr(models.BaseModel):
 '''album.getInfo'''
 
 
-class TrackTags(models.BaseModel):
-    tag: typing.List[models.Tag]
+class TrackTags(common.BaseModel):
+    tag: typing.List[common.Tag]
 
 
-class Track(models.BaseModel):
+class Track(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    artist: models.Entity
+    artist: common.Entity
     duration: typing.Optional[int]
-    streamable: models.Streamable
-    attr: models.Rank = pydantic.Field(alias='@attr')
+    streamable: common.Streamable
+    attr: common.Rank = pydantic.Field(alias='@attr')
 
 
-class Tracks(models.BaseModel):
+class Tracks(common.BaseModel):
     track: typing.List[Track]
 
 
-class Album(models.BaseModel):
+class Album(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     artist: str
     tracks: typing.Optional[Tracks]
     tags: typing.Optional[TrackTags]
@@ -50,8 +50,8 @@ class Album(models.BaseModel):
 '''album.getTags'''
 
 
-class Tags(models.BaseModel):
-    tag: typing.Optional[typing.List[models.Tag]]
+class Tags(common.BaseModel):
+    tag: typing.Optional[typing.List[common.Tag]]
     text: typing.Optional[str] = pydantic.Field(alias='#text')
     attr: Attr = pydantic.Field(alias='@attr')
 
@@ -59,31 +59,31 @@ class Tags(models.BaseModel):
 '''album.getTopTags'''
 
 
-class Toptags(models.BaseModel):
-    tag: typing.List[models.TopTag]
+class Toptags(common.BaseModel):
+    tag: typing.List[common.TopTag]
     attr: Attr = pydantic.Field(alias='@attr')
 
 
 '''album.search'''
 
 
-class AlbumMatch(models.BaseModel):
+class AlbumMatch(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     artist: str
     streamable: bool
 
 
-class AlbumMatches(models.BaseModel):
+class AlbumMatches(common.BaseModel):
     album: typing.List[AlbumMatch]
 
 
-class Results(models.BaseModel):
+class Results(common.BaseModel):
     albummatches: AlbumMatches
-    opensearch_Query: models.AttrOpensearchQuery = pydantic.Field(alias='opensearch:Query')
+    opensearch_Query: common.AttrOpensearchQuery = pydantic.Field(alias='opensearch:Query')
     opensearch_totalResults: str = pydantic.Field(alias='opensearch:totalResults')
     opensearch_startIndex: str = pydantic.Field(alias='opensearch:startIndex')
     opensearch_itemsPerPage: str = pydantic.Field(alias='opensearch:itemsPerPage')
-    attr: models.AttrQuery = pydantic.Field(alias='@attr')
+    attr: common.AttrQuery = pydantic.Field(alias='@attr')

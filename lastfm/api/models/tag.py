@@ -5,33 +5,33 @@ import uuid
 
 import pydantic
 
-import models
+from api.models import common
 
 
-class Attr(models.BaseModel):
+class Attr(common.BaseModel):
     tag: typing.Optional[str]
 
 
 '''tag.getInfo'''
 
 
-class Tag(models.BaseModel):
+class Tag(common.BaseModel):
     name: str
     total: int
     reach: int
-    wiki: models.Wiki
+    wiki: common.Wiki
 
 
 '''tag.getSimilar'''
 
 
-class SimilarTag(models.BaseModel):
+class SimilarTag(common.BaseModel):
     name: str
     url: pydantic.HttpUrl
     streamable: bool
 
 
-class Similartags(models.BaseModel):
+class Similartags(common.BaseModel):
     tag: typing.List[SimilarTag]
     attr: Attr = pydantic.Field(alias='@attr')
 
@@ -39,53 +39,53 @@ class Similartags(models.BaseModel):
 '''tag.getTopAlbums'''
 
 
-class Album(models.BaseModel):
+class Album(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
-    artist: models.Entity
-    attr: models.Rank = pydantic.Field(alias='@attr')
+    image: typing.List[common.Image]
+    artist: common.Entity
+    attr: common.Rank = pydantic.Field(alias='@attr')
 
 
-class Albums(models.BaseModel):
+class Albums(common.BaseModel):
     album: typing.List[Album]
-    tag: models.AttrTag = pydantic.Field(alias='@attr')
+    tag: common.AttrTag = pydantic.Field(alias='@attr')
 
 
 '''tag.getTopArtists'''
 
 
-class Artist(models.BaseModel):
+class Artist(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     streamable: bool
-    attr: models.Rank = pydantic.Field(alias='@attr')
+    attr: common.Rank = pydantic.Field(alias='@attr')
 
 
-class Topartists(models.BaseModel):
+class Topartists(common.BaseModel):
     artist: typing.List[Artist]
-    tag: models.AttrTag = pydantic.Field(alias='@attr')
+    tag: common.AttrTag = pydantic.Field(alias='@attr')
 
 
 '''tag.getTopTags'''
 
 
-class AttrTopTag(models.BaseModel):
+class AttrTopTag(common.BaseModel):
     offset: int
     num_res: int
     total: int
 
 
-class TopTag(models.BaseModel):
+class TopTag(common.BaseModel):
     name: str
     count: int
     reach: int
 
 
-class Toptags(models.BaseModel):
+class Toptags(common.BaseModel):
     tag: typing.List[TopTag]
     attr: AttrTopTag = pydantic.Field(alias='@attr')
 
@@ -93,31 +93,31 @@ class Toptags(models.BaseModel):
 '''tag.getTopTracks'''
 
 
-class Track(models.BaseModel):
+class Track(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     duration: int
-    artist: models.Entity
-    streamable: models.Streamable
-    attr: models.Rank = pydantic.Field(alias='@attr')
+    artist: common.Entity
+    streamable: common.Streamable
+    attr: common.Rank = pydantic.Field(alias='@attr')
 
 
-class Tracks(models.BaseModel):
+class Tracks(common.BaseModel):
     track: typing.List[Track]
-    tag: models.AttrTag = pydantic.Field(alias='@attr')
+    tag: common.AttrTag = pydantic.Field(alias='@attr')
 
 
 '''tag.getWeeklyChartList'''
 
 
-class Weekly(models.BaseModel):
+class Weekly(common.BaseModel):
     text: typing.Optional[str] = pydantic.Field(alias='#text')
     fr: int = pydantic.Field(alias='from')
     to: int
 
 
-class Weeklychartlist(models.BaseModel):
+class Weeklychartlist(common.BaseModel):
     chart: typing.List[Weekly]
     attr: Attr = pydantic.Field(alias='@attr')

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
-import enum
 import typing
 import uuid
 
 import pydantic
 
-import models
+import api.errors
+from api.models import common
 
 
-class Attr(models.BaseModel):
+class Attr(common.BaseModel):
     artist: str
     track: str
 
@@ -17,49 +17,49 @@ class Attr(models.BaseModel):
 '''track.getCorrection'''
 
 
-class AttrCorrection(models.BaseModel):
+class AttrCorrection(common.BaseModel):
     index: int
     artistcorrected: bool
     trackcorrected: bool
 
 
-class TrackCorrection(models.BaseModel):
+class TrackCorrection(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    artist: models.Entity
+    artist: common.Entity
 
 
-class Correction(models.BaseModel):
+class Correction(common.BaseModel):
     track: TrackCorrection
     attr: AttrCorrection = pydantic.Field(alias='@attr')
 
 
-class Corrections(models.BaseModel):
+class Corrections(common.BaseModel):
     correction: Correction
 
 
 '''track.getInfo'''
 
 
-class AttrPosition(models.BaseModel):
+class AttrPosition(common.BaseModel):
     position: int
 
 
-class Album(models.BaseModel):
+class Album(common.BaseModel):
     title: str
     artist: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     attr: AttrPosition = pydantic.Field(alias='@attr')
 
 
-class Tag(models.BaseModel):
-    tag: typing.List[models.Tag]
+class Tag(common.BaseModel):
+    tag: typing.List[common.Tag]
 
 
-class Track(models.BaseModel):
+class Track(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
@@ -68,33 +68,33 @@ class Track(models.BaseModel):
     playcount: int
     userplaycount: int
     userloved: bool
-    artist: models.Entity
+    artist: common.Entity
     album: Album
     toptags: Tag
-    streamable: models.Streamable
-    wiki: typing.Optional[models.Wiki]
+    streamable: common.Streamable
+    wiki: typing.Optional[common.Wiki]
 
 
 '''track.getSimilar'''
 
 
-class AttrTrack(models.BaseModel):
+class AttrTrack(common.BaseModel):
     artist: str
 
 
-class SimilarTrack(models.BaseModel):
+class SimilarTrack(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     duration: typing.Optional[int]
     playcount: int
-    artist: models.Entity
+    artist: common.Entity
     match: float
-    streamable: models.Streamable
+    streamable: common.Streamable
 
 
-class Similartracks(models.BaseModel):
+class Similartracks(common.BaseModel):
     track: typing.List[SimilarTrack]
     attr: AttrTrack = pydantic.Field(alias='@attr')
 
@@ -102,8 +102,8 @@ class Similartracks(models.BaseModel):
 '''track.getTags'''
 
 
-class Tags(models.BaseModel):
-    tag: typing.Optional[typing.List[models.Tag]]
+class Tags(common.BaseModel):
+    tag: typing.Optional[typing.List[common.Tag]]
     text: typing.Optional[str] = pydantic.Field(alias='#text')
     attr: Attr = pydantic.Field(alias='@attr')
 
@@ -111,30 +111,29 @@ class Tags(models.BaseModel):
 '''track.getTopTags'''
 
 
-class Toptags(models.BaseModel):
-    tag: typing.List[models.TopTag]
+class Toptags(common.BaseModel):
+    tag: typing.List[common.TopTag]
     attr: Attr = pydantic.Field(alias='@attr')
 
 
 '''track.scrobble'''
 
 
-class AttrScrobble(models.BaseModel):
+class AttrScrobble(common.BaseModel):
     ignored: int
     accepted: int
 
-import errors
-class IgnoredMessage(models.BaseModel):
-    code: errors.ScrobbleErrors
+class IgnoredMessage(common.BaseModel):
+    code: api.errors.ScrobbleErrors
     text: typing.Optional[str] = pydantic.Field(alias='#text')
 
 
-class Entity(models.BaseModel):
+class Entity(common.BaseModel):
     name: typing.Optional[str] = pydantic.Field(alias='#text')
     corrected: bool
 
 
-class Scrobble(models.BaseModel):
+class Scrobble(common.BaseModel):
     artist: Entity
     albumArtist: Entity
     album: Entity
@@ -143,7 +142,7 @@ class Scrobble(models.BaseModel):
     timestamp: int
 
 
-class Scrobbles(models.BaseModel):
+class Scrobbles(common.BaseModel):
     scrobble: typing.List[Scrobble]
     attr: AttrScrobble = pydantic.Field(alias='@attr')
 
@@ -151,33 +150,33 @@ class Scrobbles(models.BaseModel):
 '''track.search'''
 
 
-class TrackMatch(models.BaseModel):
+class TrackMatch(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     artist: str
     listeners: int
     streamable: typing.Optional[bool]
 
 
-class TrackMatches(models.BaseModel):
+class TrackMatches(common.BaseModel):
     track: typing.List[TrackMatch]
 
 
-class Results(models.BaseModel):
+class Results(common.BaseModel):
     trackmatches: TrackMatches
-    opensearch_Query: models.AttrOpensearchQuery = pydantic.Field(alias='opensearch:Query')
+    opensearch_Query: common.AttrOpensearchQuery = pydantic.Field(alias='opensearch:Query')
     opensearch_totalResults: str = pydantic.Field(alias='opensearch:totalResults')
     opensearch_startIndex: str = pydantic.Field(alias='opensearch:startIndex')
     opensearch_itemsPerPage: str = pydantic.Field(alias='opensearch:itemsPerPage')
-    attr: models.AttrQuery = pydantic.Field(alias='@attr')
+    attr: common.AttrQuery = pydantic.Field(alias='@attr')
 
 
 '''track.updateNowPlaying'''
 
 
-class Nowplaying(models.BaseModel):
+class Nowplaying(common.BaseModel):
     artist: Entity
     albumArtist: Entity
     album: Entity

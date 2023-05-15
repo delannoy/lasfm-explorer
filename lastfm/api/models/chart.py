@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
-import datetime
 import typing
 import uuid
 
 import pydantic
 
-import models
+from api.models import common
 
 
-class Attr(models.BaseModel):
+class Attr(common.BaseModel):
     page: int
     perPage: int
     totalPages: int
@@ -19,17 +18,17 @@ class Attr(models.BaseModel):
 '''chart.getTopArtists'''
 
 
-class Artist(models.BaseModel):
+class Artist(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     playcount: int
     listeners: int
     streamable: bool
 
 
-class Artists(models.BaseModel):
+class Artists(common.BaseModel):
     artist: typing.List[Artist]
     attr: Attr = pydantic.Field(alias='@attr')
 
@@ -37,16 +36,16 @@ class Artists(models.BaseModel):
 '''chart.getTopTags'''
 
 
-class Tag(models.BaseModel):
+class Tag(common.BaseModel):
     name: str
     url: pydantic.HttpUrl
     taggings: int
     reach: int
     streamable: bool
-    wiki: models.Wiki
+    wiki: common.Wiki
 
 
-class Tags(models.BaseModel):
+class Tags(common.BaseModel):
     tag: typing.List[Tag]
     attr: Attr = pydantic.Field(alias='@attr')
 
@@ -54,18 +53,18 @@ class Tags(models.BaseModel):
 '''chart.getTopTracks'''
 
 
-class Track(models.BaseModel):
+class Track(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     duration: int
     playcount: int
     listeners: int
-    streamable: models.Streamable
-    artist: models.Entity
+    streamable: common.Streamable
+    artist: common.Entity
 
 
-class Tracks(models.BaseModel):
+class Tracks(common.BaseModel):
     track: typing.List[Track]
     attr: Attr = pydantic.Field(alias='@attr')

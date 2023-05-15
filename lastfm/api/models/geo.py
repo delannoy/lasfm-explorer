@@ -5,10 +5,10 @@ import uuid
 
 import pydantic
 
-import models
+from api.models import common
 
 
-class Attr(models.BaseModel):
+class Attr(common.BaseModel):
     country: str
     page: int
     perPage: int
@@ -19,16 +19,16 @@ class Attr(models.BaseModel):
 '''geo.getTopArtists'''
 
 
-class Artist(models.BaseModel):
+class Artist(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     listeners: int
     streamable: bool
 
 
-class Topartists(models.BaseModel):
+class Topartists(common.BaseModel):
     artist: typing.List[Artist]
     attr: Attr = pydantic.Field(alias='@attr')
 
@@ -36,18 +36,18 @@ class Topartists(models.BaseModel):
 '''geo.getTopTracks'''
 
 
-class Track(models.BaseModel):
+class Track(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     duration: int
     listeners: int
-    streamable: models.Streamable
-    artist: models.Entity
-    attr: models.Rank = pydantic.Field(alias='@attr')
+    streamable: common.Streamable
+    artist: common.Entity
+    attr: common.Rank = pydantic.Field(alias='@attr')
 
 
-class Tracks(models.BaseModel):
+class Tracks(common.BaseModel):
     track: typing.List[Track]
     attr: Attr = pydantic.Field(alias='@attr')

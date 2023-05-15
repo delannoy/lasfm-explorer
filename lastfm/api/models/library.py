@@ -5,22 +5,22 @@ import uuid
 
 import pydantic
 
-import models
+from api.models import common
 
 
 '''library.getArtists'''
 
 
-class Artist(models.BaseModel):
+class Artist(common.BaseModel):
     name: str
     mbid: typing.Optional[uuid.UUID]
     url: pydantic.HttpUrl
-    image: typing.List[models.Image]
+    image: typing.List[common.Image]
     playcount: int
     tagcount: int
     streamable: bool
 
 
-class Artists(models.BaseModel):
+class Artists(common.BaseModel):
     artist: typing.List[Artist]
-    attr: models.AttrUser = pydantic.Field(alias='@attr')
+    attr: common.AttrUser = pydantic.Field(alias='@attr')
