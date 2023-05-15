@@ -2,9 +2,9 @@
 
 import pydantic
 
-import typ
 import param
 import request
+import typ
 
 @param.required
 @pydantic.validate_arguments

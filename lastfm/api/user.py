@@ -2,12 +2,13 @@
 
 import enum
 
-import typ
+import pydantic
+
 import param
 import request
 import secret
+import typ
 
-import pydantic
 
 class Period(enum.Enum):
     OVERALL = 'overall'

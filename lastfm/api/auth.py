@@ -5,10 +5,10 @@ import logging
 
 import pydantic
 
-import typ
 import param
 import request
 import secret
+import typ
 
 @pydantic.validate_arguments
 def calculate_api_sig(params: typ.json, api_secret: typ.UUID = secret.api_secret) -> typ.UUID:

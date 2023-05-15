@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import typ
+import pydantic
+
 import param
 import request
-
-import pydantic
+import typ
 
 @param.required
 @pydantic.validate_arguments
