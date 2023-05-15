@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import functools
-import logging
 import typing
 
+import log
 import secret
 import typ
 
@@ -17,14 +17,14 @@ def params(_locals: typ.json) -> typ.json:
     '''Drop keys with no value from `_locals` and append json `format` parameter.'''
     params = {key.lower(): val for key, val in _locals.items() if val is not None}
     params = {**params, 'format': 'json'}
-    logging.debug(params)
+    log.log.debug(params)
     return params
 
 def required(func: typing.Callable = None) -> typing.Callable:
     '''Wrapper/decorator to extract the module and function names and pass them to the function itself (also passes `api_key`). Note that the `inner` function *does not* pass positional arguments.'''
     @functools.wraps(func)
     def inner(**kwargs) -> typ.response:
-        return func(method=f'{func.__module__}.{func.__name__}', api_key=secret.api_key, **kwargs)
+        return func(method=f'{func.__module__.replace("api.", "")}.{func.__name__}', api_key=secret.api_key, **kwargs)
     return inner
 
 def listToCSV(array: typing.List[str]) -> str:
