@@ -6,6 +6,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+import awkward
+import pandas
 import pydantic
 import rich.progress
 
@@ -13,6 +15,23 @@ import api.errors
 import api.models
 import log
 import typ
+
+def validate(response: typ.json, method: str) -> pydantic.BaseModel:
+    if len(response) != 1:
+        return response
+    entity = next(iter(response))
+    response = response.pop(entity)
+    module = getattr(api.models, method.split('.')[0])
+    model = getattr(module, entity.capitalize())
+    return model(**response)
+
+def parse_error(error: typ.json):
+    response = json.loads(error)
+    if response.get('error') in {e.value for e in api.errors.Errors}:
+        error_enum = api.errors.Errors(response.get('error'))
+        log.log.error(f'{error_enum.name = }')
+        log.log.error(f'{error_enum.__doc__ = }')
+    log.log.error(f'{response = }')
 
 def http_error(error: urllib.error.HTTPError):
     '''Log `urllib.error.HTTPError`. Log corresponding `__doc__` string from `api.errors.Errors` enum.'''
@@ -48,7 +67,12 @@ def get(url: str, headers: typ.json = pydantic.Field(default_factory=dict), para
             request = urllib.request.Request(url=f'{url}?{data}', headers=headers)
         log.log.debug(request.full_url)
         response = urllib.request.urlopen(request)
-        return json.loads(response.read().decode('utf-8'))
+        response = json.loads(response.read().decode('utf-8'))
+        if not response:
+            return
+        # return response
+        data = validate(response=response, method=params.get('method'))
+        return awkward.from_json(data.json(exclude_none=True))
     except json.JSONDecodeError as error:
         json_error(error=error)
     except urllib.error.HTTPError as error:

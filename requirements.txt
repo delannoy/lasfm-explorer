@@ -1,7 +1,6 @@
+awkward
 dateutil
-dataclasses; python_version < '3.7'
-enlighten
 future-fstrings; python_version < '3.6'
 pandas
-requests
-python-walrus; python_version < '3.8'
+pydantic
+rich
