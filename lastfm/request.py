@@ -20,7 +20,8 @@ def validate(response: typ.json, method: str) -> pydantic.BaseModel:
     if len(response) != 1:
         return response
     entity = next(iter(response))
-    response = response.pop(entity)
+    if method not in ('auth.getToken'):
+        response = response.pop(entity)
     module = getattr(api.models, method.split('.')[0])
     model = getattr(module, entity.capitalize())
     return model(**response)
@@ -41,12 +42,7 @@ def http_error(error: urllib.error.HTTPError):
     response = error.read().decode('utf-8')
     if 'json' not in error.headers.get('Content-Type'):
         return log.log.error(f'{response = }')
-    response = json.loads(response)
-    if response.get('error') in {e.value for e in api.errors.Errors}:
-        error_enum = api.errors.Errors(response.get('error'))
-        log.log.error(f'{error_enum.name = }')
-        log.log.error(f'{error_enum.__doc__ = }')
-    log.log.error(f'{response = }')
+    parse_error(error=response)
 
 def json_error(error: json.JSONDecodeError):
     '''Log `json.JSONDecodeError`.'''
@@ -70,9 +66,8 @@ def get(url: str, headers: typ.json = pydantic.Field(default_factory=dict), para
         response = json.loads(response.read().decode('utf-8'))
         if not response:
             return
-        # return response
         data = validate(response=response, method=params.get('method'))
-        return awkward.from_json(data.json(exclude_none=True))
+        return awkward.from_json(source=data.json(exclude_none=True)) if isinstance(data, pydantic.BaseModel) else data
     except json.JSONDecodeError as error:
         json_error(error=error)
     except urllib.error.HTTPError as error:
@@ -83,7 +78,7 @@ def download(filepath: pathlib.Path, url: str, headers: typ.json = pydantic.Fiel
     # https://github.com/Textualize/rich/blob/master/examples/downloader.py
     url = f'{url}?{urllib.parse.urlencode({**params, **kwargs})}'
     try:
-        response = urllib.request.urlopen(urllib.request.Request(url, headers=headers))
+        response = urllib.request.urlopen(urllib.request.Request(url=url, headers=headers))
     except urllib.error.HTTPError as error:
         return http_error(error=error)
 
@@ -102,7 +97,7 @@ def download(filepath: pathlib.Path, url: str, headers: typ.json = pydantic.Fiel
     progress.console.log(f"Requesting {url}")
     progress.update(task_id=task_id, total=float(response.headers.get('Content-length')))
     with progress:
-        with open(filepath, 'wb') as out_file:
+        with open(filepath, mode='wb') as out_file:
             progress.start_task(task_id=task_id)
             for chunk in iter(lambda: response.read(2**10), b''):
                 out_file.write(chunk)

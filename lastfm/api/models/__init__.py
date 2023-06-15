@@ -2,6 +2,7 @@
 
 import api.models.album
 import api.models.artist
+import api.models.auth
 import api.models.chart
 import api.models.geo
 import api.models.library

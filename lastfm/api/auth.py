@@ -53,5 +53,5 @@ def getToken(method: str, api_key: typ.UUID, api_sig: typ.UUID = None) -> str:
     '''
     api_sig = calculate_api_sig(param.params(locals()))
     response = request.get(url=param.url, headers=param.headers, params=param.params(locals()))
-    logging.info(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={secret.api_key}&token={response.get("token")} and paste the `session key` in `secret.py`')
-    return response.get('token')
+    logging.info(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={secret.api_key}&token={response.token} and paste the `session key` in `secret.py`')
+    return response.token
