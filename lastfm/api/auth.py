@@ -15,8 +15,8 @@ password = os.getenv('LASTFM_PASSWORD')
 
 # [Create API account](https://www.last.fm/api/account/create)
 # [API Applications(https://www.last.fm/api/accounts)
-api_key = typ.UUID(hex=os.getenv('LASTFM_KEY'))
-api_secret = typ.UUID(hex=os.getenv('LASTFM_SECRET'))
+api_key = typ.UUID(hex=os.getenv('LASTFM_KEY', '12345678-1234-5678-1234-567812345678'))
+api_secret = typ.UUID(hex=os.getenv('LASTFM_SECRET', '12345678-1234-5678-1234-567812345678'))
 
 # [auth.getSession](https://www.last.fm/api/show/auth.getSession)
 sk = os.getenv('LASTFM_SESSION_KEY')
@@ -66,3 +66,13 @@ def getToken(method: str, api_key: typ.UUID, api_sig: typ.UUID = None) -> str:
     response = request.get(url=param.url, headers=param.headers, params=param.params(locals()))
     logging.info(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={api_key}&token={response.token} and pass it to `getSession` to obtain a session key.')
     return response.token
+
+def main():
+    # [Authentication: Desktop Application How-To](https://www.last.fm/api/desktopauth0
+    token = getToken()
+    confirm = input(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={api_key}&token={token} and press `y` to confirm:\n')
+    if confirm.lower() in ('y', 'yes', 'yep'):
+        sk = getSession(token=token)
+    if sk:
+        os.environ['LASTFM_SESSION_KEY'] = sk
+        logging.info(f'session key (store it securely and set as `LASTFM_SESSION_KEY` environment variable):\n{sk}')
