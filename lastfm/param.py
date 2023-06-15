@@ -4,8 +4,8 @@ import functools
 import typing
 
 import log
-import secret
 import typ
+import api.auth
 
 url = 'http://ws.audioscrobbler.com/2.0/'
 
@@ -24,7 +24,7 @@ def required(func: typing.Callable = None) -> typing.Callable:
     '''Wrapper/decorator to extract the module and function names and pass them to the function itself (also passes `api_key`). Note that the `inner` function *does not* pass positional arguments.'''
     @functools.wraps(func)
     def inner(**kwargs) -> typ.response:
-        return func(method=f'{func.__module__.replace("api.", "")}.{func.__name__}', api_key=secret.api_key, **kwargs)
+        return func(method=f'{func.__module__.replace("api.", "")}.{func.__name__}', api_key=api.auth.api_key, **kwargs)
     return inner
 
 def listToCSV(array: typing.List[str]) -> str:
