@@ -6,7 +6,7 @@ A LastFM API key is required for most API methods (can be obtained [here](https:
 
 ## usage examples
 ```python
-from api import album, artist, geo, user
+from api import *
 
 sum(album.getInfo(artist='tool', album='undertow').tracks.track.duration)
 # 3958
