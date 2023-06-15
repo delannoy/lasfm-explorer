@@ -4,7 +4,6 @@ import uuid
 
 import param
 import request
-import secret
 import typ
 import api.auth
 
@@ -14,7 +13,7 @@ param_validate_descr = '`artist` must be provided unless `mbid` is specified'
 
 @param.required
 @pydantic.validate_arguments
-def addTags(method: str, api_key: typ.UUID, artist: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def addTags(method: str, api_key: typ.UUID, artist: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Tag an artist with one or more user supplied tags.
         artist  : Required : The artist name
         tags    : Required : A comma delimited list of user supplied tags to apply to this artist. Accepts a maximum of 10 tags.
@@ -37,7 +36,7 @@ def getCorrection(method: str, api_key: typ.UUID, artist: str,) -> typ.response:
 
 @param.required
 @pydantic.validate_arguments
-def getInfo(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0, lang: str = 'eng') -> typ.response:
+def getInfo(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = api.auth.user, autocorrect: typ.Bool = 0, lang: str = 'eng') -> typ.response:
     '''Get the metadata for an artist. Includes biography, truncated at 300 characters.
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -64,7 +63,7 @@ def getSimilar(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UU
 
 @param.required
 @pydantic.validate_arguments
-def getTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
+def getTags(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.UUID = None, user: str = api.auth.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the tags applied by an individual user to an artist on Last.fm. If accessed as an authenticated service /and/ you don't supply a user parameter then this service will return tags for the authenticated user. To retrieve the list of top tags applied to an artist by all users use artist.getTopTags.
         artist      : Required [unless mbid] : The artist name
         mbid        : Optional               : The musicbrainz id for the artist
@@ -117,7 +116,7 @@ def getTopTracks(method: str, api_key: typ.UUID, artist: str = None, mbid: uuid.
 
 @param.required
 @pydantic.validate_arguments
-def removeTag(method: str, api_key: typ.UUID, artist: str, tag: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def removeTag(method: str, api_key: typ.UUID, artist: str, tag: str, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Remove a user's tag from an artist.
         artist  : Required : The artist name
         tag     : Required : A single user tag to remove from this artist.

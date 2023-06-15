@@ -6,7 +6,6 @@ import pydantic
 
 import param
 import request
-import secret
 import typ
 import api.auth
 
@@ -14,7 +13,7 @@ param_validate_descr = '`artist` and `track` must be provided unless `mbid` is s
 
 @param.required
 @pydantic.validate_arguments
-def addTags(method: str, api_key: typ.UUID, artist: str, track: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def addTags(method: str, api_key: typ.UUID, artist: str, track: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Tag an album using a list of user supplied tags.
         artist  : Required : The artist name
         track   : Required : The track name
@@ -39,7 +38,7 @@ def getCorrection(method: str, api_key: typ.UUID, artist: str, track: str) -> ty
 
 @param.required
 @pydantic.validate_arguments
-def getInfo(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
+def getInfo(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = api.auth.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the metadata for a track on Last.fm using the artist/track name or a musicbrainz id.
         artist      : Required [unless mbid] : The artist name
         track       : Required [unless mbid] : The track name
@@ -67,7 +66,7 @@ def getSimilar(method: str, api_key: typ.UUID, artist: str = None, track: str = 
 
 @param.required
 @pydantic.validate_arguments
-def getTags(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
+def getTags(method: str, api_key: typ.UUID, artist: str = None, track: str = None, mbid: uuid.UUID = None, user: str = api.auth.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the tags applied by an individual user to a track on Last.fm. To retrieve the list of top tags applied to a track by all users use track.getTopTags.
         artist      : Required [unless mbid] : The artist name
         track       : Required [unless mbid] : The track name
@@ -94,7 +93,7 @@ def getTopTags(method: str, api_key: typ.UUID, artist: str = None, track: str = 
 
 @param.required
 @pydantic.validate_arguments
-def love(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def love(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Love a track for a user profile.
         artist  : Required : An artist name (utf8 encoded)
         track   : Required : A track name (utf8 encoded)
@@ -107,7 +106,7 @@ def love(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ.U
 
 @param.required
 @pydantic.validate_arguments
-def removeTag(method: str, api_key: typ.UUID, artist: str, track: str, tag: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def removeTag(method: str, api_key: typ.UUID, artist: str, track: str, tag: str, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Remove a user's tag from a track.
         artist  : Required : The artist name
         track   : Required : The track name
@@ -121,7 +120,7 @@ def removeTag(method: str, api_key: typ.UUID, artist: str, track: str, tag: str,
 
 @param.required
 @pydantic.validate_arguments
-def scrobble(method: str, api_key: typ.UUID, artist: typ.artist, track: typ.track, timestamp: typ.timestamp, album: typ.album, mbid: typ.mbid = None, trackNumber: typ.trackNumber = None, albumArtist: typ.albumArtist = None, duration: typ.duration = None, context: typ.context = None, streamId: typ.streamId = None, chosenByUser: typ.chosenByUser = None, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def scrobble(method: str, api_key: typ.UUID, artist: typ.artist, track: typ.track, timestamp: typ.timestamp, album: typ.album, mbid: typ.mbid = None, trackNumber: typ.trackNumber = None, albumArtist: typ.albumArtist = None, duration: typ.duration = None, context: typ.context = None, streamId: typ.streamId = None, chosenByUser: typ.chosenByUser = None, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Used to add a track-play to a user's profile. Scrobble a track, or a batch of tracks. Tracks are passed to the service using array notation for each of the below params, up to a maximum of 50 scrobbles per batch [0<=i<=49]. If you are only sending a single scrobble the array notation may be ommited. Note: Extra care should be taken while calculating the signature when using array notation as the parameter names MUST be sorted according to the ASCII table (i.e., artist[10] comes before artist[1]). It is important to not use the corrections returned by the now playing service as input for the scrobble request, unless they have been explicitly approved by the user. Parameter names are case sensitive.
         artist[i]       : Required : The artist name.
         track[i]        : Required : The track name.
@@ -159,7 +158,7 @@ def search(method: str, api_key: typ.UUID, track: str, artist: str = None, limit
 
 @param.required
 @pydantic.validate_arguments
-def unlove(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def unlove(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''UnLove a track for a user profile.
         artist  : Required : An artist name (utf8 encoded)
         track   : Required : A track name (utf8 encoded)
@@ -172,7 +171,7 @@ def unlove(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ
 
 @param.required
 @pydantic.validate_arguments
-def updateNowPlaying(method: str, api_key: typ.UUID, artist: str, track: str, album: str = None, trackNumber: int = None, mbid: typ.UUID = None, duration: int = None, albumArtist: str = None, context: str = None, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def updateNowPlaying(method: str, api_key: typ.UUID, artist: str, track: str, album: str = None, trackNumber: int = None, mbid: typ.UUID = None, duration: int = None, albumArtist: str = None, context: str = None, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Used to notify Last.fm that a user has started listening to a track. Parameter names are case sensitive.
         artist      : Required : The artist name.
         track       : Required : The track name.

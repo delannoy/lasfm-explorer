@@ -4,7 +4,6 @@ import uuid
 
 import param
 import request
-import secret
 import typ
 import api.auth
 
@@ -14,7 +13,7 @@ param_validate_descr = '`artist` and `album` must be provided unless `mbid` is s
 
 @param.required
 @pydantic.validate_arguments
-def addTags(method: str, api_key: typ.UUID, artist: str, album: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def addTags(method: str, api_key: typ.UUID, artist: str, album: str, tags: typ.tags, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Tag an album using a list of user supplied tags.
         artist  : Required : The artist name
         album   : Required : The album name
@@ -29,7 +28,7 @@ def addTags(method: str, api_key: typ.UUID, artist: str, album: str, tags: typ.t
 
 @param.required
 @pydantic.validate_arguments
-def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0, lang: typ.lang = 'eng') -> typ.response:
+def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = api.auth.user, autocorrect: typ.Bool = 0, lang: typ.lang = 'eng') -> typ.response:
     '''Get the metadata and tracklist for an album on Last.fm using the album name or a musicbrainz id.
         artist      : Required [unless mbid] : The artist name
         album       : Required [unless mbid] : The album name
@@ -44,7 +43,7 @@ def getInfo(method: str, api_key: typ.UUID, artist: str = None, album: str = Non
 
 @param.required
 @pydantic.validate_arguments
-def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = secret.user, autocorrect: typ.Bool = 0) -> typ.response:
+def getTags(method: str, api_key: typ.UUID, artist: str = None, album: str = None, mbid: uuid.UUID = None, user: str = api.auth.user, autocorrect: typ.Bool = 0) -> typ.response:
     '''Get the tags applied by an individual user to an album on Last.fm. To retrieve the list of top tags applied to an album by all users use `album.getTopTags`.
         artist      : Required [unless mbid] : The artist name
         album       : Required [unless mbid] : The album name
@@ -71,7 +70,7 @@ def getTopTags(method: str, api_key: typ.UUID, artist: str = None, album: str = 
 
 @param.required
 @pydantic.validate_arguments
-def removeTag(method: str, api_key: typ.UUID, artist: str, album: str, tag: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def removeTag(method: str, api_key: typ.UUID, artist: str, album: str, tag: str, api_sig: typ.UUID = None, sk: str = api.auth.sk) -> typ.response:
     '''Remove a user's tag from an album.
         artist  : Required : The artist name
         album   : Required : The album name

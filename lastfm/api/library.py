@@ -4,12 +4,12 @@ import pydantic
 
 import param
 import request
-import secret
 import typ
+import api.auth
 
 @param.required
 @pydantic.validate_arguments
-def getArtists(method: str, api_key: typ.UUID, user: str = secret.user, limit: int = 50, page: int = 1) -> typ.response:
+def getArtists(method: str, api_key: typ.UUID, user: str = api.auth.user, limit: int = 50, page: int = 1) -> typ.response:
     '''A paginated list of all the artists in a user's library, with play counts and tag counts.
         user    : Required : The user whose library you want to fetch.
         limit   : Optional : The number of results to fetch per page. Defaults to 50.

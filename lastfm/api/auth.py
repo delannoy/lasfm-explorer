@@ -2,16 +2,27 @@
 
 import hashlib
 import logging
+import os
 
 import pydantic
 
 import param
 import request
-import secret
 import typ
 
+user = os.getenv('LASTFM_USER')
+password = os.getenv('LASTFM_PASSWORD')
+
+# [Create API account](https://www.last.fm/api/account/create)
+# [API Applications(https://www.last.fm/api/accounts)
+api_key = typ.UUID(hex=os.getenv('LASTFM_KEY'))
+api_secret = typ.UUID(hex=os.getenv('LASTFM_SECRET'))
+
+# [auth.getSession](https://www.last.fm/api/show/auth.getSession)
+sk = os.getenv('LASTFM_SESSION_KEY')
+
 @pydantic.validate_arguments
-def calculate_api_sig(params: typ.json, api_secret: typ.UUID = secret.api_secret) -> typ.UUID:
+def calculate_api_sig(params: typ.json, api_secret: typ.UUID = api_secret) -> typ.UUID:
     '''Calculates `api_sig` (sorts all method call `params`, merges them into a continous string of key & value pairs, and calculates md5)'''
     # https://www.last.fm/api/authspec
     # https://lastfm-docs.github.io/api-docs/auth/signature/
@@ -23,7 +34,7 @@ def calculate_api_sig(params: typ.json, api_secret: typ.UUID = secret.api_secret
 
 @param.required
 @pydantic.validate_arguments
-def getMobileSession(method: str, api_key: typ.UUID, username: str, password: str, api_sig: typ.UUID = None, sk: str = secret.sk) -> typ.response:
+def getMobileSession(method: str, api_key: typ.UUID, username: str, password: str, api_sig: typ.UUID = None, sk: str = sk) -> typ.response:
     '''Create a web service session for a user. Used for authenticating a user when the password can be inputted by the user. Accepts email address as well, so please use the username supplied in the output. Only suitable for standalone mobile devices. See the authentication how-to for more. You must use HTTPS and POST in order to use this method.
         username : Required : The last.fm username or email address.
         password : Required : The password in plain text.
@@ -53,5 +64,5 @@ def getToken(method: str, api_key: typ.UUID, api_sig: typ.UUID = None) -> str:
     '''
     api_sig = calculate_api_sig(param.params(locals()))
     response = request.get(url=param.url, headers=param.headers, params=param.params(locals()))
-    logging.info(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={secret.api_key}&token={response.token} and paste the `session key` in `secret.py`')
+    logging.info(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={api_key}&token={response.token} and pass it to `getSession` to obtain a session key.')
     return response.token
