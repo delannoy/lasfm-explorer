@@ -1,13 +1,6 @@
 #!/usr/bin/env python3
 
-from api import album
-from api import artist
-from api import chart
-from api import geo
-from api import library
-from api import tag
-from api import track
-from api import user
+from api import *
 
 artist1 = 'failure'
 mbid_artist1 = 'f0ed9f50-70b9-4406-9374-7d76ae21a04a'
