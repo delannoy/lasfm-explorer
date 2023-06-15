@@ -1,8 +1,2 @@
-# blacklist (ignore all files and directories recursively)
-*
-
-# whitelist
-!*.py
-!.gitignore
-!README.md
-!requirements.txt
+__pycache__/
+*.json
