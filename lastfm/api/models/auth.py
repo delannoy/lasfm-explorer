@@ -2,8 +2,6 @@
 
 import uuid
 
-import pydantic
-
 from api.models import common
 
 class Token(common.BaseModel):

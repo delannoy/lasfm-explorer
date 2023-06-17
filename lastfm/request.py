@@ -7,7 +7,6 @@ import urllib.parse
 import urllib.request
 
 import awkward
-import pandas
 import pydantic
 import rich.progress
 
