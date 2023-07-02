@@ -52,11 +52,11 @@ async def download(url: httpx.URL, progress: rich.progress.Progress, task: rich.
     async with httpx.AsyncClient(timeout=HTTPX_TIMEOUT) as async_client:
         async with async_client.stream(method='GET', url=url, headers=param.headers) as response:
             task.total = int(response.headers.get('Content-Length'))
-            data = ''
+            data = bytes()
             async for chunk in response.aiter_bytes():
-                data = data + chunk.decode('utf-8')
+                data = data + chunk
                 progress.update(task_id=task.id, completed=response.num_bytes_downloaded)
-    response = json.loads(data)
+    response = json.loads(data.decode('utf-8'))
     response['recenttracks']['track'] = [track for track in response.get('recenttracks').get('track') if not track.get('@attr')] # remove `nowplaying` track from response
     with open(filepath, mode='w') as out_file:
         json.dump(obj=response, fp=out_file)
