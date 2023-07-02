@@ -57,12 +57,12 @@ def get(url: str, headers: typ.json = pydantic.Field(default_factory=dict), para
     data = urllib.parse.urlencode({**params, **kwargs})
     try:
         if params.get('method') in ('track.love', 'track.unlove', 'track.scrobble', 'track.updateNowPlaying'):
-            request = urllib.request.Request(url=url, data=data.encode('utf-8'), headers=headers)
+            request = urllib.request.Request(url=url, data=data.encode('utf-8'), headers=headers) # HTTP POST request
         else:
             request = urllib.request.Request(url=f'{url}?{data}', headers=headers)
-        log.log.debug(request.full_url)
-        response = urllib.request.urlopen(request)
-        response = json.loads(response.read().decode('utf-8'))
+        with urllib.request.urlopen(request) as response:
+            log.log.info(f'HTTP Request: {request.get_method()} {request.full_url} {response.status}')
+            response = json.loads(response.read().decode('utf-8'))
         if not response:
             return
         data = validate(response=response, method=params.get('method'))
