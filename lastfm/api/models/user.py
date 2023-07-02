@@ -126,8 +126,28 @@ class RecentTrack(common.BaseModel):
     attr: typing.Optional[AttrNowPlaying] = pydantic.Field(alias='@attr')
 
 
+class ArtistExtended(common.BaseModel):
+    name: str
+    mbid: None # artist mbid is missing with the `extended` option
+    url: pydantic.HttpUrl
+    image: typing.List[common.Image]
+
+
+class RecentTrackExtended(common.BaseModel):
+    name: str
+    mbid: typing.Optional[uuid.UUID]
+    url: pydantic.HttpUrl
+    image: typing.List[common.Image]
+    date: typing.Optional[common.Date]
+    artist: ArtistExtended
+    album: common.Album
+    streamable: bool
+    loved: bool
+    attr: typing.Optional[AttrNowPlaying] = pydantic.Field(alias='@attr')
+
+
 class Recenttracks(common.BaseModel):
-    track: typing.List[RecentTrack]
+    track: typing.Union[typing.List[RecentTrack], RecentTrack, typing.List[RecentTrackExtended], RecentTrackExtended] # if no scrobbles are recorded, an empty list will be returned or a single `RecentTrack` (if user is "now playing") will be returned
     attr: common.AttrUser = pydantic.Field(alias='@attr')
 
 
