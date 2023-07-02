@@ -1,3 +1,4 @@
 #!/usr/bin/env python3
 
-__all__ = ['album', 'artist', 'auth', 'chart', 'geo', 'library', 'tag', 'track', 'user']
+import api.auth
+__all__ = ['auth', 'album', 'artist', 'chart', 'geo', 'library', 'tag', 'track', 'user']
