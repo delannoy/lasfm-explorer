@@ -32,8 +32,8 @@ class Bool():
 
 class UnixTimestamp:
 
-    def parseDateTime(dt: str, timezone: str = 'UTC') -> datetime.datetime:
-        return dateparser.parse(str(dt), settings={'TIMEZONE': timezone}) # [Python 3.9 PytzUsageWarning](https://github.com/scrapinghub/dateparser/issues/1013#issuecomment-1109403189)
+    def parseDateTime(dt: str, tz: str = 'UTC') -> datetime.datetime:
+        return dateparser.parse(dt) if dateparser.parse(dt).tzinfo else dateparser.parse(f'{dt} {tz}')
 
     def unixtimestamp(dt: datetime.datetime) -> int:
         return int(dt.timestamp())
@@ -49,6 +49,8 @@ class UnixTimestamp:
             return cls.unixtimestamp(cls.parseDateTime(v))
         elif isinstance(v, datetime.datetime):
             return cls.unixtimestamp(v)
+        elif isinstance(v, float):
+            return int(v)
         else:
             return v
 
