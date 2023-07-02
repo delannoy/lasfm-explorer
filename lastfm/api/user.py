@@ -75,14 +75,14 @@ def getPersonalTags(method: str, api_key: typ.UUID, tag: str, taggingtype: Taggi
 
 @param.required
 @pydantic.validate_arguments
-def getRecentTracks(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, to: typ.UnixTimestamp = None, limit: int = 50, page: int = 1, extended: int = 0) -> typ.response:
+def getRecentTracks(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, TO: typ.UnixTimestamp = None, limit: int = 50, page: int = 1, extended: int = 0) -> typ.response:
     '''Get a list of the recent tracks listened to by this user. Also includes the currently playing track with the nowplaying="true" attribute if the user is currently listening.
         user     : Required : The last.fm username to fetch the recent tracks of.
         from     : Optional : Beginning timestamp of a range - only display scrobbles after this time, in UNIX timestamp format (integer number of seconds since 00 : 00 : 00, January 1st 1970 UTC). This must be in the UTC time zone.
         to       : Optional : End timestamp of a range - only display scrobbles before this time, in UNIX timestamp format (integer number of seconds since 00 : 00 : 00, January 1st 1970 UTC). This must be in the UTC time zone.
         limit    : Optional : The number of results to fetch per page. Defaults to 50. Maximum is ~~200~~ 1000.
         page     : Optional : The page number to fetch. Defaults to first page.
-        extended : Optional : Includes extended data in each artist, and whether or not the user has loved each track [0|1]
+        extended : Optional : Includes extended data in each artist, and whether or not the user has loved each track [0|1] [NOTE THAT ALL `ARTIST_MBID` ARE STRIPPED WITH THIS OPTION]
         api_key  : Required : A Last.fm API key.
     '''
     return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
@@ -135,7 +135,7 @@ def getTopTracks(method: str, api_key: typ.UUID, user: str = api.auth.user, peri
 
 @param.required
 @pydantic.validate_arguments
-def getWeeklyAlbumChart(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, to: typ.UnixTimestamp = None) -> typ.response:
+def getWeeklyAlbumChart(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, TO: typ.UnixTimestamp = None) -> typ.response:
     '''Get an album chart for a user profile, for a given date range. If no date range is supplied, it will return the most recent album chart for this user.
         user    : Required : The last.fm username to fetch the charts of.
         from    : Optional : The date at which the chart should start from. See User.getChartsList for more.
@@ -146,7 +146,7 @@ def getWeeklyAlbumChart(method: str, api_key: typ.UUID, user: str = api.auth.use
 
 @param.required
 @pydantic.validate_arguments
-def getWeeklyArtistChart(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, to: typ.UnixTimestamp = None) -> typ.response:
+def getWeeklyArtistChart(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, TO: typ.UnixTimestamp = None) -> typ.response:
     '''Get an artist chart for a user profile, for a given date range. If no date range is supplied, it will return the most recent artist chart for this user.
         user    : Required : The last.fm username to fetch the charts of.
         from    : Optional : The date at which the chart should start from. See User.getChartsList for more.
@@ -157,7 +157,7 @@ def getWeeklyArtistChart(method: str, api_key: typ.UUID, user: str = api.auth.us
 
 @param.required
 @pydantic.validate_arguments
-def getWeeklyTrackChart(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, to: typ.UnixTimestamp = None) -> typ.response:
+def getWeeklyTrackChart(method: str, api_key: typ.UUID, user: str = api.auth.user, FROM: typ.UnixTimestamp = None, TO: typ.UnixTimestamp = None) -> typ.response:
     '''Get a track chart for a user profile, for a given date range. If no date range is supplied, it will return the most recent track chart for this user.
         user    : Required : The last.fm username to fetch the charts of.
         from    : Optional : The date at which the chart should start from. See User.getChartsList for more.

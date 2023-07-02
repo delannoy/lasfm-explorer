@@ -18,7 +18,7 @@ tracks = ['track0','track1','track2']
 tag1='manchester'
 country1='france'
 FROM = 1555555555
-to = 1666666666
+TO = 1666666666
 timestamps = ['1970-01-01 12:00:00','1970-01-01 13:00:00', '1970-01-01 14:00:00']
 
 def testAlbum():
@@ -95,7 +95,7 @@ def testUser():
     user.getLovedTracks()
     [user.getPersonalTags(tag=tag1, taggingtype=_.value) for _ in user.TaggingType]
     user.getRecentTracks()
-    user.getRecentTracks(FROM=FROM, to=to)
+    user.getRecentTracks(FROM=FROM, TO=TO)
     user.getTopAlbums()
     [user.getTopAlbums(period=e.value) for e in user.Period]
     user.getTopArtists()
@@ -104,12 +104,12 @@ def testUser():
     user.getTopTracks()
     [user.getTopTracks(period=e.value) for e in user.Period]
     user.getWeeklyAlbumChart()
-    user.getWeeklyAlbumChart(FROM=FROM, to=to)
+    user.getWeeklyAlbumChart(FROM=FROM, TO=TO)
     user.getWeeklyArtistChart()
-    user.getWeeklyArtistChart(FROM=FROM, to=to)
+    user.getWeeklyArtistChart(FROM=FROM, TO=TO)
     user.getWeeklyChartList()
     user.getWeeklyTrackChart()
-    user.getWeeklyTrackChart(FROM=FROM, to=to)
+    user.getWeeklyTrackChart(FROM=FROM, TO=TO)
     user.getTrackScrobbles(artist=artist1, track=track1)
 
 def main():
