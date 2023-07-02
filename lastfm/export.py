@@ -12,8 +12,9 @@ import pathlib
 
 import aiometer
 import httpx
-import rich.progress
+import rich.console
 import rich.live
+import rich.progress
 
 from api import auth
 from api import user
@@ -73,7 +74,7 @@ def playsOnDisk(filepath_glob: str = '*json') -> int:
 def validateExport(playcount: int, filepath_glob: str = '*json'):
     '''Verify that the number of track plays for files matching `filepath_glob` is equal to `playcount`.'''
     playcount_on_disk = playsOnDisk(filepath_glob=filepath_glob)
-    log.log.info('export completed successfully!') if playcount_on_disk == playcount else log.log.warning(f'export incomplete\n{playcount = }\n{playcount_on_disk = }')
+    log.log.info(f'{playcount} plays already exported') if playcount_on_disk == playcount else log.log.warning(f'export incomplete\n{playcount = }\n{playcount_on_disk = }')
     return playcount_on_disk == playcount
 
 def alreadyExported(year: int):
@@ -89,9 +90,9 @@ async def export(force: bool = False):
     total_playcount = int(user.getInfo(user=PARAMS.get('user')).playcount)
     first_scrobble = user.getRecentTracks(user=PARAMS.get('user'), limit=1, page=total_playcount).track.date.dateTime[-1]
     begin_year = datetime.datetime.fromisoformat(f'{first_scrobble}+00:00').year
-    current_year = datetime.datetime.now(tz=datetime.timezone.utc)
-    for year in range(begin_year, current_year.year+1):
-        log.log.info(f'{year = }')
+    current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
+    for year in range(begin_year, current_year+1):
+        rich.console.Console().rule(title=str(year))
         if (not force) and alreadyExported(year=year):
             continue
         urls = getURL(year)
