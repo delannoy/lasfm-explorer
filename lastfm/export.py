@@ -12,6 +12,8 @@ import pathlib
 
 import aiometer
 import httpx
+import rich.progress
+import rich.live
 
 from api import auth
 from api import user
@@ -22,6 +24,12 @@ log.log.setLevel(logging.getLevelName('INFO'))
 
 PARAMS = {'method': 'user.getRecentTracks', 'api_key': auth.api_key, 'user': auth.user, 'format': 'json', 'limit': 1000}
 EXPORT_PATH = pathlib.Path(f'data/{auth.user}/RecentTracks')
+PROGRESS_COLS = (rich.progress.TextColumn("[bold blue]{task.fields[year]}-{task.fields[page]:03d}", justify="right"),
+                rich.progress.BarColumn(bar_width=None),
+                rich.progress.TaskProgressColumn(text_format='[progress.percentage]{task.percentage:>3.1f}%'),
+                rich.progress.DownloadColumn(),
+                rich.progress.TransferSpeedColumn(),
+                rich.progress.TimeRemainingColumn())
 
 def getURL(year: int) -> list[httpx.URL]:
     '''Return paginate URLs for the given `year`.'''
@@ -30,13 +38,19 @@ def getURL(year: int) -> list[httpx.URL]:
     total_pages = math.ceil(int(user.getRecentTracks(FROM=FROM, to=TO, limit=1).attr.totalPages) / PARAMS.get('limit'))
     return [httpx.URL(url=param.url, params={**PARAMS, 'from': FROM, 'to': TO, 'page': page}) for page in range(1, total_pages+1)]
 
-async def download(year: int, url: httpx.URL):
+async def download(url: httpx.URL, progress: rich.progress.Progress, task: rich.progress.Task):
     '''Query `url`, remove `nowplaying` track from response, and write to disk.'''
-    page = int(url.params.get('page'))
+    year = task.fields.get('year')
+    page = task.fields.get('page')
     filepath = pathlib.Path(f'{EXPORT_PATH}/{year}-{page:03d}.json')
     async with httpx.AsyncClient(timeout=30.0) as async_client:
-        response = await async_client.get(url=url, headers=param.headers)
-    response = response.json()
+        async with async_client.stream(method='GET', url=url, headers=param.headers) as response:
+            task.total = int(response.headers.get('Content-Length'))
+            data = ''
+            async for chunk in response.aiter_bytes():
+                data = data + chunk.decode('utf-8')
+                progress.update(task_id=task.id, completed=response.num_bytes_downloaded)
+    response = json.loads(data)
     response['recenttracks']['track'] = [track for track in response.get('recenttracks').get('track') if not track.get('@attr')] # remove `nowplaying` track from response
     with open(filepath, mode='w') as out_file:
         json.dump(obj=response, fp=out_file)
@@ -61,7 +75,11 @@ async def export(begin_year: int = None):
     for year in range(begin_year, current_year.year+1):
         urls = getURL(year)
         log.log.info(f'{year} [{len(urls)} pages]')
-        await aiometer.run_on_each(functools.partial(download, year), urls, max_per_second=1/param.sleep)
+        progress = rich.progress.Progress(*PROGRESS_COLS)
+        _ = [progress.add_task(description=f'{year}-{page:03d}', year=year, page=page) for page, url in enumerate(urls, start=1)]
+        with rich.live.Live(progress):
+            jobs = [functools.partial(download, url=url, progress=progress, task=progress.tasks[page]) for page, url in enumerate(urls)]
+            await aiometer.run_all(jobs, max_per_second=1/param.sleep)
     validateExport(playcount=playcount)
 
 def main(all: bool = False):
