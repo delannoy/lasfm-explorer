@@ -13,13 +13,9 @@ import awkward
 
 '''[Spotify Web API](https://developer.spotify.com/documentation/web-api/reference/)'''
 
-ARTIST_ID = '3grvcGPaLhfrD5CYsecr4j'
-ALBUM_ID = '5hbxMCegyQPhpycfjtlW6I'
-TRACK_ID = '5dux3AkWPrlKFVcHDUqor2'
-PLAYLIST_ID = '65PdVn8FEJiiAIbUekw4a1'
-
 def csv(values: list[str], sep: str = ',') -> str:
-    return str.join(sep, values)
+    if values is not None:
+        return str.join(sep, values)
 
 SCOPE = {
         'image': {'ugc-image-upload': True},
@@ -132,10 +128,11 @@ class Spotify:
 
     @classmethod
     def request(cls, method: str, endpoint: str, token: str, params: dict[str, typing.Any] = {}, data: dict[str, typing.Any] = {}):
-        params = {k: v for k, v in params.items() if v}
+        params = {k: v for k, v in params.items() if v is not None}
         url = urllib.parse.urlparse(url=f'https://api.spotify.com/v1{endpoint}?{urllib.parse.urlencode(query=params)}')
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': f'Bearer {token}'}
         if data:
+            data = {k: v for k, v in data.items() if v is not None}
             data = json.dumps(data).encode('utf-8') # ["Error parsing JSON" when using Spotify API](https://stackoverflow.com/a/30100530) [Problem sending post requests to spotify api in python](https://stackoverflow.com/a/70234391)
             request = urllib.request.Request(method=method, url=urllib.parse.urlunparse(url), data=data, headers=headers)
         else:
@@ -166,37 +163,35 @@ class Album:
     def __post_init__(self):
         self.unsave = self.remove
 
-    def get(self, id: str, market: str = ''):
+    def infoSingle(self, id: str, market: str = None):
         '''[Get Album](https://developer.spotify.com/documentation/web-api/reference/get-an-album)'''
         return Spotify.get(endpoint=f'/albums/{id}', token=self.auth.token(), market=market)
 
-    def info(self, ids: list[str], market: str = ''):
+    def info(self, ids: list[str], market: str = None):
         '''[Get Several Albums](https://developer.spotify.com/documentation/web-api/reference/get-multiple-albums)'''
-        return Spotify.get(endpoint=f'/albums', token=self.auth.token(), ids=csv(ids), market=market)
+        return Spotify.get(endpoint='/albums', token=self.auth.token(), ids=csv(ids), market=market)
 
-    def tracks(self, id: str, market: str = '', limit: int = 20, offset: int = 0):
+    def tracks(self, id: str, limit: int = 20, offset: int = 0, market: str = None):
         '''[Get Album Tracks](https://developer.spotify.com/documentation/web-api/reference/get-an-albums-tracks)'''
-        return Spotify.get(endpoint=f'/albums/{id}/tracks', token=self.auth.token(), id=id, market=market, limit=limit, offset=offset)
+        return Spotify.get(endpoint=f'/albums/{id}/tracks', token=self.auth.token(), id=id, limit=limit, offset=offset, market=market)
 
-    def saved(self, limit: int = 20, offset: int = 0, market: str = ''):
+    def saved(self, limit: int = 20, offset: int = 0, market: str = None):
         '''[Get User's Saved Albums](https://developer.spotify.com/documentation/web-api/reference/get-users-saved-albums)'''
         return Spotify.get(endpoint='/me/albums', token=self.auth.access_token, limit=limit, offset=offset, market=market)
 
     def save(self, ids: list[str]):
         '''[Save Albums for Current User](https://developer.spotify.com/documentation/web-api/reference/save-albums-user)'''
-        return Spotify.put(endpoint='/me/albums', token=self.auth.access_token, data={'ids': ids})
-        # return Spotify.put(endpoint='/me/albums', token=self.auth.access_token, params={'ids': csv(ids)})
+        return Spotify.put(endpoint='/me/albums', token=self.auth.access_token, data=dict(ids=ids))
 
     def remove(self, ids: list[str]):
         '''[Remove Users' Saved Albums](https://developer.spotify.com/documentation/web-api/reference/remove-albums-user)'''
-        return Spotify.delete(endpoint='/me/albums', token=self.auth.access_token, data={'ids': ids})
-        # return Spotify.delete(endpoint='/me/albums', token=self.auth.access_token, params={'ids': csv(ids)})
+        return Spotify.delete(endpoint='/me/albums', token=self.auth.access_token, data=dict(ids=ids))
 
     def isSaved(self, ids: list[str]):
         '''[Check User's Saved Albums](https://developer.spotify.com/documentation/web-api/reference/check-users-saved-albums)'''
         return Spotify.get(endpoint='/me/albums/contains', token=self.auth.access_token, ids=csv(ids))
 
-    def newReleases(self, country: str = '', limit: int = 20, offset: int = 0):
+    def newReleases(self, country: str = None, limit: int = 20, offset: int = 0):
         '''[Get New Releases](https://developer.spotify.com/documentation/web-api/reference/get-new-releases)'''
         return Spotify.get(endpoint='/browse/new-releases', token=self.auth.token(), country=country, limit=limit, offset=offset)
 
@@ -205,19 +200,19 @@ class Album:
 class Artist:
     auth: Auth
 
-    def get(self, id: str):
+    def infoSingle(self, id: str):
         '''[Get Artist](https://developer.spotify.com/documentation/web-api/reference/get-an-artist)'''
         return Spotify.get(endpoint=f'/artists/{id}', token=self.auth.token())
 
     def info(self, ids: list[str]):
         '''[Get Several Artists](https://developer.spotify.com/documentation/web-api/reference/get-multiple-artists)'''
-        return Spotify.get(endpoint=f'/artists', token=self.auth.token(), ids=csv(ids))
+        return Spotify.get(endpoint='/artists', token=self.auth.token(), ids=csv(ids))
 
-    def albums(self, id: str, include_groups: list[str] = [], market: str = '', limit: int = 20, offset: int = 0):
+    def albums(self, id: str, include_groups: list[str] = None, limit: int = 20, offset: int = 0, market: str = None):
         '''[Get Artist's Albums](https://developer.spotify.com/documentation/web-api/reference/get-an-artists-albums)'''
         if include_groups:
             assert all(entity in ('album', 'single', 'appears_on', 'compilation') for entity in include_groups)
-        return Spotify.get(endpoint=f'/artists/{id}/albums', token=self.auth.token(), id=id, include_groups=csv(include_groups), market=market, limit=limit, offset=offset)
+        return Spotify.get(endpoint=f'/artists/{id}/albums', token=self.auth.token(), id=id, include_groups=csv(include_groups), limit=limit, offset=offset, market=market)
 
     def topTracks(self, id: str, market: str):
         '''[Get Artist's Top Tracks](https://developer.spotify.com/documentation/web-api/reference/get-an-artists-top-tracks)'''
@@ -233,50 +228,404 @@ class Artist:
 class Audiobook:
     auth: Auth
 
+    def __post_init__(self):
+        self.unsave = self.remove
+
+    def infoSingle(self, id: str, market: str = None):
+        '''[Get an Audiobook](https://developer.spotify.com/documentation/web-api/reference/get-an-audiobook)'''
+        return Spotify.get(endpoint=f'/audiobooks/{id}', token=self.auth.token(), market=market)
+
+    def info(self, ids: list[str], market: str = None):
+        '''[Get Several Audiobooks](https://developer.spotify.com/documentation/web-api/reference/get-multiple-audiobooks)'''
+        return Spotify.get(endpoint='/audiobooks', token=self.auth.token(), ids=csv(ids), market=market)
+
+    def chapters(self, id: str, limit: int = 20, offset: int = 0, market: str = None):
+        '''[Get Audiobook Chapters](https://developer.spotify.com/documentation/web-api/reference/get-audiobook-chapters)'''
+        return Spotify.get(endpoint=f'/audiobooks/{id}/chapters', token=self.auth.token(), limit=limit, offset=offset, market=market)
+
+    def saved(self, limit: int = 20, offset: int = 0):
+        '''[Get User's Saved Audiobooks](https://developer.spotify.com/documentation/web-api/reference/get-users-saved-audiobooks)'''
+        return Spotify.get(endpoint='/me/audiobooks', token=self.auth.access_token, limit=limit, offset=offset)
+
+    def save(self, ids: list[str]):
+        '''[Save Audiobooks for Current User](https://developer.spotify.com/documentation/web-api/reference/save-audiobooks-user)'''
+        return Spotify.put(endpoint='/me/audiobooks', token=self.auth.access_token, data=dict(ids=ids))
+
+    def remove(self, ids: list[str]):
+        '''[Remove User's Saved Audiobooks](https://developer.spotify.com/documentation/web-api/reference/remove-audiobooks-user)'''
+        return Spotify.delete(endpoint='/me/audiobooks', token=self.auth.access_token, data=dict(ids=ids))
+
+    def isSaved(self, ids: list[str]):
+        '''[Check User's Saved Audiobooks](https://developer.spotify.com/documentation/web-api/reference/check-users-saved-audiobooks)'''
+        return Spotify.get(endpoint='/me/audiobooks/contains', token=self.auth.access_token, ids=csv(ids))
+
 
 @dataclasses.dataclass
-class Categories:
+class Category:
     auth: Auth
+
+    def browse(self, country: str = None, locale: str = None, limit: int = 20, offset: int = 0):
+        '''[Get Several Browse Categories](https://developer.spotify.com/documentation/web-api/reference/get-categories)'''
+        return Spotify.get(endpoint='/browse/categories', token=self.auth.token(), country=country, locale=locale, limit=limit, offset=offset)
+
+    def info(self, category_id: str, country: str = None, locale: str = None):
+        '''[Get Single Browse Category](https://developer.spotify.com/documentation/web-api/reference/get-a-category)'''
+        return Spotify.get(endpoint=f'/browse/categories/{category_id}', token=self.auth.token(), country=country, locale=locale)
 
 
 @dataclasses.dataclass
 class Chapter:
     auth: Auth
 
+    def infoSingle(self, id: str, market: str = None):
+        '''[Get a Chapter](https://developer.spotify.com/documentation/web-api/reference/get-a-chapter)'''
+        return Spotify.get(endpoint=f'/chapters/{id}', token=self.auth.token(), market=market)
+
+    def info(self, ids: list[str], market: str = None):
+        '''[Get Several Chapters](https://developer.spotify.com/documentation/web-api/reference/get-several-chapters)'''
+        return Spotify.get(endpoint='/chapters', token=self.auth.token(), ids=csv(ids), market=market)
+
+
+@dataclasses.dataclass
+class Episode:
+    auth: Auth
+
+    def __post_init__(self):
+        self.unsave = self.remove
+
+    def infoSingle(self, id: str, market: str = None):
+        '''[Get Episode](https://developer.spotify.com/documentation/web-api/reference/get-an-episode)'''
+        return Spotify.get(endpoint=f'/episodes/{id}', token=self.auth.access_token, market=market)
+
+    def info(self, ids: list[str], market: str = None):
+        '''[Get Several Episodes](https://developer.spotify.com/documentation/web-api/reference/get-multiple-episodes)'''
+        return Spotify.get(endpoint='/episodes', token=self.auth.access_token, ids=csv(ids), market=market)
+
+    def saved(self, limit: int = 20, offset: int = 0, market: str = None):
+        '''[Get User's Saved Episodes](https://developer.spotify.com/documentation/web-api/reference/get-users-saved-episodes)'''
+        return Spotify.get(endpoint='/me/episodes', token=self.auth.access_token, limit=limit, offset=offset, market=market)
+
+    def save(self, ids: list[str]):
+        '''[Save Episodes for Current User](https://developer.spotify.com/documentation/web-api/reference/save-episodes-user)'''
+        return Spotify.put(endpoint='/me/episodes', token=self.auth.access_token, data=dict(ids=ids))
+
+    def remove(self, ids: list[str]):
+        '''[Remove User's Saved Episodes](https://developer.spotify.com/documentation/web-api/reference/remove-episodes-user)'''
+        return Spotify.delete(endpoint='/me/episodes', token=self.auth.access_token, data=dict(ids=ids))
+
+    def isSaved(self, ids: list[str]):
+        '''[Check User's Saved Episodes](https://developer.spotify.com/documentation/web-api/reference/check-users-saved-episodes)'''
+        return Spotify.get(endpoint='/me/episodes/contains', token=self.auth.access_token, ids=csv(ids))
+
 
 @dataclasses.dataclass
 class Genre:
     auth: Auth
+
+    def seeds(self):
+        '''[Get Available Genre Seeds](https://developer.spotify.com/documentation/web-api/reference/get-recommendation-genres)'''
+        return Spotify.get(endpoint='/recommendations/available-genre-seeds', token=self.auth.token())
 
 
 @dataclasses.dataclass
 class Market:
     auth: Auth
 
+    def info(self):
+        '''[Get Available Markets](https://developer.spotify.com/documentation/web-api/reference/get-available-markets)'''
+        return Spotify.get(endpoint='/markets', token=self.auth.token())
+
 
 @dataclasses.dataclass
 class Player:
     auth: Auth
+
+    def __post_init__(self):
+        self.currentlyPlaying = self.nowPlaying
+
+    def playbackState(self, additional_types: list[str] = None, market: str = None):
+        '''[Get Playback State](https://developer.spotify.com/documentation/web-api/reference/get-information-about-the-users-current-playback)'''
+        if additional_types:
+            assert additional_types in ('track', 'episode')
+            additional_types = csv(additional_types)
+        return Spotify.get(endpoint='/me/player', token=self.auth.access_token, additional_types=additional_types, market=market)
+
+    def transferPlayback(self, device_ids: list[str], play: bool = None):
+        '''[Transfer Playback](https://developer.spotify.com/documentation/web-api/reference/transfer-a-users-playback)'''
+        return Spotify.put(endpoint='/me/player', token=self.auth.access_token, data=dict(device_ids=device_ids, play=play))
+
+    def availableDevices(self):
+        '''[Get Available Devices](https://developer.spotify.com/documentation/web-api/reference/get-a-users-available-devices)'''
+        return Spotify.get(endpoint='/me/player/devices', token=self.auth.access_token)
+
+    def nowPlaying(self, additional_types: list[str]= None, market: str = None):
+        '''[Get Currently Playing Track](https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track)'''
+        if additional_types:
+            assert additional_types in ('track', 'episode')
+            additional_types = csv(additional_types)
+        return Spotify.get(endpoint='/me/player/currently-playing', token=self.auth.access_token, additional_types=additional_types, market=market)
+
+    def play(self, device_id: str = None, context_uri: str = None, uris: list[str] = None, offset: dict[str, typing.Any] = None, position_ms: int = None):
+        '''[Start/Resume Playback](https://developer.spotify.com/documentation/web-api/reference/start-a-users-playback)'''
+        return Spotify.put(endpoint='/me/player/play', token=self.auth.access_token, params=dict(device_id=device_id), data=dict(context_uri=context_uri, uris=uris, offset=offset, position_ms=position_ms))
+
+    def pause(self, device_id: str = None):
+        '''[Pause Playback](https://developer.spotify.com/documentation/web-api/reference/pause-a-users-playback)'''
+        return Spotify.put(endpoint='/me/player/pause', token=self.auth.access_token, params=dict(device_id=device_id))
+
+    def next(self, device_id: str = None):
+        '''[Skip To Next](https://developer.spotify.com/documentation/web-api/reference/skip-users-playback-to-next-track)'''
+        return Spotify.post(endpoint='/me/player/next', token=self.auth.access_token, params=dict(device_id=device_id))
+
+    def previous(self, device_id: str = None):
+        '''[Skip To Previous](https://developer.spotify.com/documentation/web-api/reference/skip-users-playback-to-previous-track)'''
+        return Spotify.post(endpoint='/me/player/previous', token=self.auth.access_token, params=dict(device_id=device_id))
+
+    def seek(self, position_ms: int, device_id: str = None):
+        '''[Seek To Position](https://developer.spotify.com/documentation/web-api/reference/seek-to-position-in-currently-playing-track)'''
+        return Spotify.put(endpoint='/me/player/seek', token=self.auth.access_token, params=dict(position_ms=position_ms, device_id=device_id))
+
+    def repeat(self, state: str, device_id: str = None):
+        '''[Set Repeat Mode](https://developer.spotify.com/documentation/web-api/reference/set-repeat-mode-on-users-playback)'''
+        assert state in ('track', 'context', 'off')
+        return Spotify.put(endpoint='/me/player/repeat', token=self.auth.access_token, params=dict(state=state, device_id=device_id))
+
+    def volume(self, volume_percent: int, device_id: str = None):
+        '''[Set Playback Volume](https://developer.spotify.com/documentation/web-api/reference/set-volume-for-users-playback)'''
+        return Spotify.put(endpoint='/me/player/volume', token=self.auth.access_token, params=dict(volume_percent=volume_percent, device_id=device_id))
+
+    def shuffle(self, state: bool, device_id: str = None):
+        '''[Toggle Playback Shuffle](https://developer.spotify.com/documentation/web-api/reference/toggle-shuffle-for-users-playback)'''
+        return Spotify.put(endpoint='/me/player/shuffle', token=self.auth.access_token, params=dict(state=state, device_id=device_id))
+
+    def recent(self, limit: int = 20, after: int = None, before: int = None):
+        '''[Get Recently Played Tracks](https://developer.spotify.com/documentation/web-api/reference/get-recently-played)'''
+        if after:
+            assert before is None
+        if before:
+            assert after is None
+        return Spotify.get(endpoint='/me/player/recently-played', token=self.auth.access_token)
+
+    def queue(self):
+        '''[Get the User's Queue](https://developer.spotify.com/documentation/web-api/reference/get-queue)'''
+        return Spotify.get(endpoint='/me/player/queue', token=self.auth.access_token)
+
+    def add(self, uri: str, device_id: str = None):
+        '''[Add Item to Playback Queue](https://developer.spotify.com/documentation/web-api/reference/add-to-queue)'''
+        return Spotify.post(endpoint='/me/player/queue', token=self.auth.access_token, params=dict(uri=uri, device_id=device_id))
 
 
 @dataclasses.dataclass
 class Playlist:
     auth: Auth
 
+    def __post_init__(self):
+        self.deleteTracks = self.removeTracks
+        self.overwrite = self.replace
+
+    def info(self, playlist_id: str, fields: list[str] = None, additional_types: list[str] = None, market: str = None):
+        if additional_types:
+            assert additional_types in ('track', 'episode')
+            additional_types = csv(additional_types)
+        '''[Get Playlist](https://developer.spotify.com/documentation/web-api/reference/get-playlist)'''
+        return Spotify.get(endpoint=f'/playlists/{playlist_id}', token=self.auth.token(), fields=csv(fields), additional_types=additional_types, market=market)
+
+    def modify(self, playlist_id: str, name: str = None, public: bool = None, collaborative: bool = None, description: str = None):
+        '''[Change Playlist Details](https://developer.spotify.com/documentation/web-api/reference/change-playlist-details)'''
+        return Spotify.put(endpoint=f'/playlists/{playlist_id}', token=self.auth.access_token, data=dict(name=name, public=public, collaborative=collaborative, description=description))
+
+    def getTracks(self, playlist_id: str, fields: str = None, additional_types: str = None, limit: int = 20, offset: int = 0, market: str = None):
+        '''[Get Playlist Items](https://developer.spotify.com/documentation/web-api/reference/get-playlists-tracks)'''
+        if additional_types:
+            assert additional_types in ('track', 'episode')
+            additional_types = csv(additional_types)
+        return Spotify.get(endpoint=f'/playlists/{playlist_id}/tracks', token=self.auth.access_token, fields=fields, additional_types=additional_types, limit=limit, offset=offset, market=market)
+
+    def update(self, playlist_id: str, uris: list[str] = None, range_start: int = None, insert_before: int = None, range_length: int = None, snapshot_id: str = None):
+        '''[Update Playlist Items](https://developer.spotify.com/documentation/web-api/reference/reorder-or-replace-playlists-tracks)'''
+        if uris:
+            assert not any([range_start, insert_before, range_length, snapshot_id])
+        if any([range_start, insert_before, range_length, snapshot_id]):
+            assert uris is None
+        data = dict(uris=uris, range_start=range_start, insert_before=insert_before, range_length=range_length, snapshot_id=snapshot_id)
+        return Spotify.put(endpoint=f'/playlists/{playlist_id}/tracks', token=self.auth.access_token, data=data)
+
+    def reorder(self, playlist_id: str, range_start: int = None, insert_before: int = None, range_length: int = 1, snapshot_id: str = None):
+        '''[Update Playlist Items](https://developer.spotify.com/documentation/web-api/reference/reorder-or-replace-playlists-tracks)'''
+        return Spotify.put(endpoint=f'/playlists/{playlist_id}/tracks', token=self.auth.access_token, data=dict(range_start=range_start, insert_before=insert_before, range_length=range_length, snapshot_id=snapshot_id))
+
+    def replace(self, playlist_id: str, uris: list[str] = None):
+        '''[Update Playlist Items](https://developer.spotify.com/documentation/web-api/reference/reorder-or-replace-playlists-tracks)'''
+        return Spotify.put(endpoint=f'/playlists/{playlist_id}/tracks', token=self.auth.access_token, data=dict(uris=uris))
+
+    def addTracks(self, playlist_id: str, uris: list[str], position: int = None):
+        '''[Add Items to Playlist](https://developer.spotify.com/documentation/web-api/reference/add-tracks-to-playlist)'''
+        return Spotify.post(endpoint=f'/playlists/{playlist_id}/tracks', token=self.auth.access_token, data=dict(uris=uris, position=position))
+
+    def removeTracks(self, playlist_id: str, tracks: list[dict[str, str]], snapshot_id: int = None):
+        '''[Remove Playlist Items](https://developer.spotify.com/documentation/web-api/reference/remove-tracks-playlist)'''
+        return Spotify.delete(endpoint=f'/playlists/{playlist_id}/tracks', token=self.auth.access_token, data=dict(tracks=tracks, snapshot_id=snapshot_id))
+
+    def mine(self, limit: int = 20, offset: int = 0):
+        '''[Get Current User's Playlists](https://developer.spotify.com/documentation/web-api/reference/get-a-list-of-current-users-playlists)'''
+        return Spotify.get(endpoint='/me/playlists', token=self.auth.access_token, limit=limit, offset=offset)
+
+    def get(self, user_id: str, limit: int = 20, offset: int = 0):
+        '''[Get User's Playlists](https://developer.spotify.com/documentation/web-api/reference/get-list-users-playlists)'''
+        return Spotify.get(endpoint=f'/users/{user_id}/playlists', token=self.auth.access_token, limit=limit, offset=offset)
+
+    def create(self, user_id: str, name: str, public: bool = None, collaborative: bool = None, description: str = None):
+        '''[Create Playlist](https://developer.spotify.com/documentation/web-api/reference/create-playlist)'''
+        assert not all([public, collaborative])
+        return Spotify.post(endpoint=f'/users/{user_id}/playlists', token=self.auth.access_token, data=dict(name=name, public=public, collaborative=collaborative, description=description))
+
+    def featured(self, country: str = None, locale: str = None, timestamp: str = None, limit: int = 20, offset: int = 0):
+        '''[Get Featured Playlists](https://developer.spotify.com/documentation/web-api/reference/get-featured-playlists)'''
+        return Spotify.get(endpoint='/browse/featured-playlists', token=self.auth.token(), country=country, locale=locale, timestamp=timestamp, limit=limit, offset=offset)
+
+    def category(self, category_id: str, country: str = None, limit: int = 20, offset: int = 0):
+        '''[Get Category's Playlists](https://developer.spotify.com/documentation/web-api/reference/get-a-categories-playlists)'''
+        return Spotify.get(endpoint=f'/browse/categories/{category_id}/playlists', token=self.auth.token(), category_id=category_id, country=country, limit=limit, offset=offset)
+
+    def cover(self, playlist_id: str):
+        '''[Get Playlist Cover Image](https://developer.spotify.com/documentation/web-api/reference/get-playlist-cover)'''
+        return Spotify.get(endpoint=f'/playlists/{playlist_id}/images', token=self.auth.token())
+
+    def uploadCover(self, playlist_id: str, image: bytes):
+        '''[Add Custom Playlist Cover Image](https://developer.spotify.com/documentation/web-api/reference/upload-custom-playlist-cover)'''
+        url = f'https://api.spotify.com/v1/playlists/{playlist_id}/images'
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': f'Bearer {self.auth.access_token}'}
+        request = urllib.request.Request(method='PUT', url=url, data=image, headers=headers)
+        return Spotify.getResponse(request=request)
+
 
 @dataclasses.dataclass
 class Search:
     auth: Auth
+    filter_album: tuple[str] = ('album', 'artist', 'tag:hipster,' 'tag:new', 'upc', 'year')
+    filter_artist: tuple[str] = ('artist', 'genre', 'year')
+    filter_track: tuple[str] = ('album', 'artist', 'genre', 'isrc', 'track', 'year')
+
+    def item(self, q: str, type: list[str], include_external: str = None, limit: int = 20, offset: int = 0, market: str = None):
+        '''[Search for Item](https://developer.spotify.com/documentation/web-api/reference/search)'''
+        assert all(entity in ('album', 'artist', 'playlist', 'track', 'show', 'episode', 'audiobook') for entity in type)
+        if include_external:
+            assert include_external == 'audio'
+        return Spotify.get(endpoint='/search', token=self.auth.token(), q=q, type=csv(type), include_external=include_external, limit=limit, offset=offset, market=market)
 
 
 @dataclasses.dataclass
 class Show:
     auth: Auth
 
+    def __post_init__(self):
+        self.unsave = self.remove
+
+    def infoSingle(self, id: str, market: str = None):
+        '''[Get Show](https://developer.spotify.com/documentation/web-api/reference/get-a-show)'''
+        return Spotify.get(endpoint=f'/shows/{id}', token=self.auth.access_token, market=market)
+
+    def info(self, ids: list[str], market: str = None):
+        '''[Get Several Shows](https://developer.spotify.com/documentation/web-api/reference/get-multiple-shows)'''
+        return Spotify.get(endpoint='/shows', token=self.auth.token(), ids=csv(ids), market=market)
+
+    def episodes(self, id: str, limit: int = 20, offset: int = 0, market: str = None):
+        '''[Get Show Episodes](https://developer.spotify.com/documentation/web-api/reference/get-a-shows-episodes)'''
+        return Spotify.get(endpoint=f'/shows/{id}/episodes', token=self.auth.access_token, limit=limit, offset=offset, market=market)
+
+    def saved(self, limit: int = 20, offset: int = 0):
+        '''[Get User's Saved Shows](https://developer.spotify.com/documentation/web-api/reference/get-users-saved-shows)'''
+        return Spotify.get(endpoint='/me/shows', token=self.auth.access_token, limit=limit, offset=offset)
+
+    def save(self, ids: list[str]):
+        '''[Save Shows for Current User](https://developer.spotify.com/documentation/web-api/reference/save-shows-user)'''
+        return Spotify.put(endpoint='/me/shows', token=self.auth.access_token, data=dict(ids=ids))
+
+    def remove(self, ids: list[str], market: str = None):
+        '''[Remove User's Saved Shows](https://developer.spotify.com/documentation/web-api/reference/remove-shows-user)'''
+        return Spotify.delete(endpoint='/me/shows', token=self.auth.access_token, data=dict(ids=ids, market=market))
+
+    def isSaved(self, ids: list[str]):
+        '''[Check User's Saved Shows](https://developer.spotify.com/documentation/web-api/reference/check-users-saved-shows)'''
+        return Spotify.get(endpoint='/me/shows/contains', token=self.auth.access_token, ids=csv(ids))
+
 
 @dataclasses.dataclass
 class Track:
     auth: Auth
+
+    def __post_init__(self):
+        self.unsave = self.remove
+
+    def infoSingle(self, id: str, market: str = None):
+        '''[Get Track](https://developer.spotify.com/documentation/web-api/reference/get-track)'''
+        return Spotify.get(endpoint=f'/tracks/{id}', token=self.auth.token(), market=market)
+
+    def info(self, ids: list[str], market: str = None):
+        '''[Get Several Tracks](https://developer.spotify.com/documentation/web-api/reference/get-several-tracks)'''
+        return Spotify.get(endpoint='/tracks', token=self.auth.token(), ids=csv(ids), market=market)
+
+    def saved(self, limit: int = 20, offset: int = 0, market: str = None):
+        '''[Get User's Saved Tracks](https://developer.spotify.com/documentation/web-api/reference/get-users-saved-tracks)'''
+        return Spotify.get(endpoint='/me/tracks', token=self.auth.access_token, limit=limit, offset=offset, market=market)
+
+    def save(self, ids: list[str]):
+        '''[Save Tracks for Current User](https://developer.spotify.com/documentation/web-api/reference/save-tracks-user)'''
+        return Spotify.put(endpoint='/me/tracks', token=self.auth.access_token, data=dict(ids=ids))
+
+    def remove(self, ids: list[str]):
+        '''[Remove User's Saved Tracks](https://developer.spotify.com/documentation/web-api/reference/remove-tracks-user)'''
+        return Spotify.delete(endpoint='/me/tracks', token=self.auth.access_token, data=dict(ids=ids))
+
+    def isSaved(self, ids: list[str]):
+        '''[Check User's Saved Tracks](https://developer.spotify.com/documentation/web-api/reference/check-users-saved-tracks)'''
+        return Spotify.get(endpoint='/me/tracks/contains', token=self.auth.access_token, ids=csv(ids))
+
+    def audioFeatures(self, ids: list[str]):
+        '''[Get Tracks' Audio Features](https://developer.spotify.com/documentation/web-api/reference/get-several-audio-features)'''
+        return Spotify.get(endpoint='/audio-features', token=self.auth.token(), ids=csv(ids))
+
+    def audioFeaturesSingle(self, id: str):
+        '''[Get Track's Audio Features](https://developer.spotify.com/documentation/web-api/reference/get-audio-features)'''
+        return Spotify.get(endpoint=f'/audio-features/{id}', token=self.auth.token(), id=id)
+
+    def audioAnalysis(self, id: str):
+        ''''[Get Track's Audio Analysis](https://developer.spotify.com/documentation/web-api/reference/get-audio-analysis)'''
+        return Spotify.get(endpoint=f'/audio-analysis/{id}', token=self.auth.token(), id=id)
+
+    def recommendations(self, seed_artists: list[str], seed_genres: list[str], seed_tracks: list[str],
+            min_acousticness: float = None, max_acousticness: float = None, target_acousticness: float = None,
+            min_danceability: float = None, max_danceability: float = None, target_danceability: float = None,
+            min_duration_ms: int = None, max_duration_ms: int = None, target_duration_ms: int = None,
+            min_energy: float = None, max_energy: float = None, target_energy: float = None,
+            min_instrumentalness: float = None, max_instrumentalness: float = None, target_instrumentalness: float = None,
+            min_key: float = None, max_key: float = None, target_key: float = None,
+            min_liveness: float = None, max_liveness: float = None, target_liveness: float = None,
+            min_loudness: float = None, max_loudness: float = None, target_loudness: float = None,
+            min_mode: float = None, max_mode: float = None, target_mode: float = None,
+            min_popularity: float = None, max_popularity: float = None, target_popularity: float = None,
+            min_speechiness: float = None, max_speechiness: float = None, target_speechiness: float = None,
+            min_tempo: float = None, max_tempo: float = None, target_tempo: float = None,
+            min_time_signature: float = None, max_time_signature: float = None, target_time_signature: float = None,
+            min_valence: float = None, max_valence: float = None, target_valence: float = None,
+            limit: int = 20, market: str = None):
+        '''[Get Recommendations](https://developer.spotify.com/documentation/web-api/reference/get-recommendations)'''
+        return Spotify.get(endpoint='/recommendations', token=self.auth.token(), seed_artists=csv(seed_artists), seed_genres=csv(seed_genres), seed_tracks=csv(seed_tracks),
+                min_acousticness=min_acousticness, max_acousticness=max_acousticness, target_acousticness=target_acousticness,
+                min_danceability=min_danceability, max_danceability=max_danceability, target_danceability=target_danceability,
+                min_duration_ms=min_duration_ms, max_duration_ms=max_duration_ms, target_duration_ms=target_duration_ms,
+                min_energy=min_energy, max_energy=max_energy, target_energy=target_energy,
+                min_instrumentalness=min_instrumentalness, max_instrumentalness=max_instrumentalness, target_instrumentalness=target_instrumentalness,
+                min_key=min_key, max_key=max_key, target_key=target_key,
+                min_liveness=min_liveness, max_liveness=max_liveness, target_liveness=target_liveness,
+                min_loudness=min_loudness, max_loudness=max_loudness, target_loudness=target_loudness,
+                min_mode=min_mode, max_mode=max_mode, target_mode=target_mode,
+                min_popularity=min_popularity, max_popularity=max_popularity, target_popularity=target_popularity,
+                min_speechiness=min_speechiness, max_speechiness=max_speechiness, target_speechiness=target_speechiness,
+                min_tempo=min_tempo, max_tempo=max_tempo, target_tempo=target_tempo,
+                min_time_signature=min_time_signature, max_time_signature=max_time_signature, target_time_signature=target_time_signature,
+                min_valence=min_valence, max_valence=max_valence, target_valence=target_valence,
+                limit=limit, market=market)
 
 
 @dataclasses.dataclass
@@ -285,7 +634,7 @@ class User:
 
     def me(self):
         '''[Get Current User's Profile](https://developer.spotify.com/documentation/web-api/reference/get-current-users-profile)'''
-        return Spotify.get(endpoint='/mex', token=self.auth.access_token)
+        return Spotify.get(endpoint='/me', token=self.auth.access_token)
 
     def topItems(self, type: str, time_range: str = 'medium_term', limit: int = 20, offset: int = 0):
         '''[Get User's Top Items](https://developer.spotify.com/documentation/web-api/reference/get-users-top-artists-and-tracks)'''
@@ -298,13 +647,13 @@ class User:
 
     def followPlaylist(self, playlist_id: str, public: bool = True):
         '''[Follow Playlist](https://developer.spotify.com/documentation/web-api/reference/follow-playlist)'''
-        return Spotify.put(endpoint=f'/playlists/{playlist_id}/followers', token=self.auth.access_token, data={'public': public})
+        return Spotify.put(endpoint=f'/playlists/{playlist_id}/followers', token=self.auth.access_token, data=dict(public=public))
 
     def unfollowPlaylist(self, playlist_id: str):
         '''[Follow Playlist](https://developer.spotify.com/documentation/web-api/reference/follow-playlist)'''
         return Spotify.delete(endpoint=f'/playlists/{playlist_id}/followers', token=self.auth.access_token)
 
-    def followedArtists(self, type: str = 'artist', after: str = '', limit: int = 20):
+    def followedArtists(self, type: str = 'artist', after: str = None, limit: int = 20):
         '''[Get Followed Artists](https://developer.spotify.com/documentation/web-api/reference/get-followed)'''
         assert type in ('artist')
         return Spotify.get(endpoint='/me/following', token=self.auth.access_token, type=type, after=after, limit=limit)
@@ -312,14 +661,12 @@ class User:
     def follow(self, type: str, ids: list[str]):
         '''[Follow Artists or Users](https://developer.spotify.com/documentation/web-api/reference/follow-artists-users)'''
         assert type in ('artist', 'user')
-        return Spotify.put(endpoint='/me/following', token=self.auth.access_token, params={'type': type}, data={'ids': ids})
-        # return Spotify.put(endpoint='/me/following', token=self.auth.access_token, params={'type': type, 'ids': csv(ids)})
+        return Spotify.put(endpoint='/me/following', token=self.auth.access_token, params=dict(type=type), data=dict(ids=ids))
 
     def unfollow(self, type: str, ids: list[str]):
         '''[Unfollow Artists or Users](https://developer.spotify.com/documentation/web-api/reference/unfollow-artists-users)'''
         assert type in ('artist', 'user')
-        return Spotify.delete(endpoint='/me/following', token=self.auth.access_token, params={'type': type}, data={'ids': ids})
-        # return Spotify.delete(endpoint='/me/following', token=self.auth.access_token, params={'type': type, 'ids': csv(ids)})
+        return Spotify.delete(endpoint='/me/following', token=self.auth.access_token, params=dict(type=type), data=dict(ids=ids))
 
     def isFollowing(self, type: str, ids: list[str]):
         '''[Check If User Follows Artists or Users](https://developer.spotify.com/documentation/web-api/reference/check-current-user-follows)'''
