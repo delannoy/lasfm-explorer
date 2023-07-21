@@ -5,13 +5,19 @@ import dataclasses
 import datetime
 import base64
 import json
+import logging
 import os
 import urllib
 import typing
 
 import awkward
+import rich.logging
+import rich.prompt
 
 '''[Spotify Web API](https://developer.spotify.com/documentation/web-api/reference/)'''
+
+rich_handler = rich.logging.RichHandler(rich_tracebacks=True, log_time_format="[%Y-%m-%d %H:%M:%S]") # [rich.logging](https://rich.readthedocs.io/en/stable/reference/logging.html)
+logging.basicConfig(level=logging.DEBUG, format='%(message)s', handlers=[rich_handler])
 
 def csv(values: list[str], sep: str = ',') -> str:
     if values is not None:
@@ -67,16 +73,16 @@ class Auth:
         data = urllib.parse.urlencode(query={'grant_type': 'client_credentials'}).encode('utf-8')
         request = urllib.request.Request(method='POST', url=url, data=data, headers=self.clientAuth())
         with urllib.request.urlopen(url=request) as response:
-            print(f'{request.method} | {response.status} | {request.full_url} | {dict(urllib.parse.parse_qsl(request.data.decode()))}')
+            logging.debug(f'{request.method} | {response.status} | {request.full_url} | {dict(urllib.parse.parse_qsl(request.data.decode()))}')
             return json.loads(response.read().decode('utf-8')).get('access_token')
 
     def userAuth(self):
         '''[Authorization Code Flow | Request User Authorization](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-user-authorization)'''
         # https://python.plainenglish.io/bored-of-libraries-heres-how-to-connect-to-the-spotify-api-using-pure-python-bd31e9e3d88a
-        print(f'\nPlease make sure "{self.redirect_uri}" is whitelisted:\nhttps://developer.spotify.com/dashboard/{self.client_id}/settings\n')
+        logging.warning(f'\nPlease make sure "{self.redirect_uri}" is whitelisted:\nhttps://developer.spotify.com/dashboard/{self.client_id}/settings\n')
         params = urllib.parse.urlencode(dict(client_id=self.client_id, response_type='code', redirect_uri=self.redirect_uri, scope=csv(SCOPE, sep=' ')))
         request = urllib.request.Request(method='GET', url=f'https://accounts.spotify.com/authorize?{params}')
-        return input(f'Please log in and authorize the application through your browser:\n{request.full_url}\n\nand paste the "code" parameter in the redirect url:\n')
+        return input(f"Please log in and authorize the application through your browser:\n{request.full_url}\n\nand paste the 'code' parameter from the redirected url:\n")
 
     def accessToken(self, data: dict[str, str]):
         '''[Authorization Code Flow | Request Access Token](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-access-token)'''
@@ -84,14 +90,14 @@ class Auth:
         headers = {**self.clientAuth(), 'Content-Type': 'application/x-www-form-urlencoded'}
         request = urllib.request.Request(method='POST', url='https://accounts.spotify.com/api/token', data=data, headers=headers)
         with urllib.request.urlopen(url=request) as response:
-            print(f'{request.method} | {response.status} | {request.full_url} | {dict(urllib.parse.parse_qsl(request.data.decode()))}')
+            logging.debug(f'{request.method} | {response.status} | {request.full_url} | {dict(urllib.parse.parse_qsl(request.data.decode()))}')
             return json.loads(response.read().decode('utf-8'))
 
     def requestAccessToken(self, code: str):
         '''[Authorization Code Flow | Request Access Token](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-access-token)'''
         data = dict(grant_type='authorization_code', code=code, redirect_uri=self.redirect_uri)
         response = self.accessToken(data=data)
-        print(f'\nStore your `refresh_token` somewhere safe:\n{response["refresh_token"]}\n\nand set it as the following environment variable:\nSPOTIFY_REFRESH_TOKEN')
+        logging.warning(f'\nStore your `refresh_token` somewhere safe:\n{response["refresh_token"]}\n\nand set it as the following environment variable:\nSPOTIFY_REFRESH_TOKEN')
         self.access_token, self.refresh_token = response.get('access_token'), response.get('refresh_token')
         self.access_token_validity = datetime.datetime.now(tz=datetime.timezone.utc).timestamp() + float(response.get('expires_in'))
 
@@ -117,16 +123,16 @@ class Spotify:
         '''Read and parse response to `request`.'''
         with urllib.request.urlopen(url=request) as response:
             msg = f'{request.method} | {response.status} | {request.full_url}'
-            print(f'{msg} | {request.data.decode()}') if request.data else print(msg)
+            logging.info(f'{msg} | {request.data.decode()}') if request.data else logging.info(msg)
             response = response.read().decode('utf-8')
             return awkward.from_json(source=response) if response else response
 
     @staticmethod
     def handleHTTPError(http_error: urllib.error.HTTPError):
         '''Read and parse `http_error`.'''
-        print(f'{http_error.status} | {http_error.reason} | {http_error.url}')
+        logging.error(f'{http_error.status} | {http_error.reason} | {http_error.url}')
         if 'json' in http_error.headers.get('Content-Type', ''):
-            print(json.loads(http_error.read().decode('utf-8')).get('error'))
+            logging.error(json.loads(http_error.read().decode('utf-8')).get('error'))
 
     @classmethod
     def getResponse(cls, request: urllib.request.Request):
