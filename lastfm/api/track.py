@@ -139,7 +139,7 @@ def scrobble(method: str, api_key: typ.UUID, artist: typ.artist, track: typ.trac
     '''
     params = param.params(locals())
     arrayFields = ('artist', 'track', 'timestamp', 'album', 'mbid', 'trackNumber', 'albumArtist', 'duration', 'context', 'streamId')
-    params = {**params, **param.arrayParams({k:v for k, v in params.items() if k in arrayFields})}
+    params.update(param.arrayParams({k: v for k, v in params.items() if k in arrayFields}))
     _ = [params.pop(key, None) for key in arrayFields]
     params.update({"api_sig": api.auth.calculate_api_sig(params)})
     return request.get(url=param.url, headers=param.headers, params=param.params(params))

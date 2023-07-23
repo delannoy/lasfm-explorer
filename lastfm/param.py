@@ -17,7 +17,7 @@ sleep = 0.2 # [Rate limit copied from pylast since it is not explicitly mentione
 def params(_locals: typ.json) -> typ.json:
     '''Drop keys with no value from `_locals` and append json `format` parameter.'''
     params = {key.lower(): val for key, val in _locals.items() if val is not None}
-    params = {**params, 'format': 'json'}
+    params.update(dict(format='json'))
     log.log.debug(params)
     return params
 
