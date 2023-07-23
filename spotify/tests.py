@@ -108,7 +108,7 @@ def testPlaylist():
     playlist.category(category_id='dinner')
     playlist.cover(playlist_id=playlist_id)
     playlist.uploadCover(playlist_id=playlist_id, image=image)
-    User(auth).unfollowPlaylist(playlist_id=playlist_id)
+    User(auth).unfollowPlaylist(playlist_id=playlist_id) # [Delete Spotify playlist programmatically](https://stackoverflow.com/a/62811488)
 
 def testSearch():
     Search(auth).item(q='remaster track:Doxy artist:Miles Davis', type=['album', 'track'])
