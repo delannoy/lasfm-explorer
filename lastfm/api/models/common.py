@@ -12,7 +12,7 @@ def validateDateTime(field: str) -> classmethod:
     # https://github.com/pydantic/pydantic/issues/940#issuecomment-569765091
 
     def parseDateTime(dt: str) -> datetime.datetime:
-        return dateparser.parse(str(dt), settings={'TIMEZONE': 'UTC'}) # [Python 3.9 PytzUsageWarning](https://github.com/scrapinghub/dateparser/issues/1013#issuecomment-1109403189)
+        return dateparser.parse(str(dt), settings=dict(TIMEZONE='UTC', RETURN_AS_TIMEZONE_AWARE=True))
 
     return pydantic.validator(field, pre=True, allow_reuse=True)(parseDateTime)
 
