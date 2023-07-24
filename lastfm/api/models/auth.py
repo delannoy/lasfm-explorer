@@ -9,5 +9,5 @@ class Token(common.BaseModel):
 
 class Session(common.BaseModel):
     name: str
-    key: uuid.UUID
+    key: str
     subscriber: bool

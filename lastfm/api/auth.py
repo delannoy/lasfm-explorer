@@ -64,15 +64,13 @@ def getToken(method: str, api_key: typ.UUID, api_sig: typ.UUID = None) -> str:
     '''
     api_sig = calculate_api_sig(param.params(locals()))
     response = request.get(url=param.url, headers=param.headers, params=param.params(locals()))
-    logging.info(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={api_key}&token={response.token} and pass it to `getSession` to obtain a session key.')
     return response.token
 
 def main():
-    # [Authentication: Desktop Application How-To](https://www.last.fm/api/desktopauth0
+    '''[Authentication: Desktop Application How-To](https://www.last.fm/api/desktopauth)'''
     token = getToken()
-    confirm = input(f'Please authorize application access from browser http://www.last.fm/api/auth/?api_key={api_key}&token={token} and press `y` to confirm:\n')
+    confirm = input(f'\nPlease authorize application access from browser:\nhttp://www.last.fm/api/auth/?api_key={api_key}&token={token}\nand press `y` to confirm: ')
     if confirm.lower() in ('y', 'yes', 'yep'):
         sk = getSession(token=token)
-    if sk:
-        os.environ['LASTFM_SESSION_KEY'] = sk
-        logging.info(f'session key (store it securely and set as `LASTFM_SESSION_KEY` environment variable):\n{sk}')
+        if sk:
+            logging.warning(f'Session key: {sk}\n(store it securely and set as `LASTFM_SESSION_KEY` environment variable)')
