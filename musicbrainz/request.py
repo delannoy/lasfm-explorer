@@ -15,7 +15,7 @@ import api
 rich_handler = rich.logging.RichHandler(rich_tracebacks=True, log_time_format="[%Y-%m-%d %H:%M:%S]") # [rich.logging](https://rich.readthedocs.io/en/stable/reference/logging.html)
 logging.basicConfig(level=logging.DEBUG, format='%(message)s', handlers=[rich_handler])
 
-def auth():
+def auth() -> urllib.request.OpenerDirector:
     # [HTTP Authentication in Python](https://stackoverflow.com/questions/720867/http-authentication-in-python)
     username, password = os.getenv('MUSICBRAINZ_USERNAME'), os.getenv('MUSICBRAINZ_PASSWORD')
     if username and password:

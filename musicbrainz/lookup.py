@@ -9,8 +9,7 @@ import awkward
 import api
 import request
 
-'''You can perform a lookup of an entity when you have the MBID for that entity'''
-# https://musicbrainz.org/doc/MusicBrainz_API#Lookups
+'''[You can perform a lookup of an entity when you have the MBID for that entity](https://musicbrainz.org/doc/MusicBrainz_API#Lookups)'''
 
 
 class CollectionType(str, enum.Enum):
@@ -30,11 +29,11 @@ class CollectionType(str, enum.Enum):
 class Inc:
 
     @classmethod
-    def get(cls, attr):
+    def get(cls, attr: str):
         return getattr(cls, attr)
 
     @classmethod
-    def enums(cls):
+    def enums(cls) -> list[str]:
         return [attr for attr, typ in vars(cls).items() if isinstance(typ, enum.EnumMeta)]
 
     class Area(str, enum.Enum):

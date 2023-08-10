@@ -9,19 +9,18 @@ import awkward
 import api
 import request
 
-'''Browse requests are a direct lookup of all the entities directly linked to another entity ("directly linked" meaning it does not include entities linked by a relationship)'''
-# https://musicbrainz.org/doc/MusicBrainz_API#Browse
+'''[Browse requests are a direct lookup of all the entities directly linked to another entity ("directly linked" meaning it does not include entities linked by a relationship)](https://musicbrainz.org/doc/MusicBrainz_API#Browse)'''
 
 
 class LinkedEntity:
     '''https://musicbrainz.org/doc/MusicBrainz_API#Linked_entities'''
 
     @classmethod
-    def get(cls, attr):
+    def get(cls, attr: str):
         return getattr(cls, attr)
 
     @classmethod
-    def enums(cls):
+    def enums(cls) -> list[str]:
         return [attr for attr, typ in vars(cls).items() if isinstance(typ, enum.EnumMeta)]
 
     class Area(str, enum.Enum):
@@ -100,11 +99,11 @@ class LinkedEntity:
 class Inc:
 
     @classmethod
-    def get(cls, attr):
+    def get(cls, attr: str):
         return getattr(cls, attr)
 
     @classmethod
-    def enums(cls):
+    def enums(cls) -> list[str]:
         return [attr for attr, typ in vars(cls).items() if isinstance(typ, enum.EnumMeta)]
 
     class Area(str, enum.Enum):
@@ -418,10 +417,10 @@ def recording(linked_entity: dict[LinkedEntity.Recording, uuid.UUID] = None, inc
     return browse(entity='recording', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def release(linked_entity: dict[LinkedEntity.Release, uuid.UUID] = None, inc: list[Inc.Release] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='release', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity='release', linked_entity=linked_entity, inc=inc, type=type, status=status, offset=offset, limit=limit, **kwargs)
 
 def release_group(linked_entity: dict[LinkedEntity.Release_group, uuid.UUID] = None, inc: list[Inc.Release_group] = None, type: list[api.ReleaseType] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='release-group', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity='release-group', linked_entity=linked_entity, inc=inc, type=type, offset=offset, limit=limit, **kwargs)
 
 def series(linked_entity: dict[LinkedEntity.Series, uuid.UUID] = None, inc: list[Inc.Series] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
     return browse(entity='series', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
