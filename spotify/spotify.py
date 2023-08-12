@@ -16,10 +16,11 @@ import rich.prompt
 
 '''[Spotify Web API](https://developer.spotify.com/documentation/web-api/reference/)'''
 
-rich_handler = rich.logging.RichHandler(rich_tracebacks=True, log_time_format="[%Y-%m-%d %H:%M:%S]") # [rich.logging](https://rich.readthedocs.io/en/stable/reference/logging.html)
+rich_handler = rich.logging.RichHandler(rich_tracebacks=True, log_time_format='[%Y-%m-%d %H:%M:%S]') # [rich.logging](https://rich.readthedocs.io/en/stable/reference/logging.html)
 logging.basicConfig(level=logging.DEBUG, format='%(message)s', handlers=[rich_handler])
 
 def csv(values: list[str], sep: str = ',') -> str:
+    '''Merge list of strings into a strings with elements separated by `sep`.'''
     if values is not None:
         return str.join(sep, values)
 
@@ -49,7 +50,7 @@ class Auth:
         '''Verify that `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` enviroment variables are set.'''
         assert (self.client_id and self.client_secret), '\nPlease create an application:\nhttps://developer.spotify.com/dashboard/applications\n\nand set the following environment variables:\nSPOTIFY_CLIENT_ID\nSPOTIFY_CLIENT_SECRET'
 
-    def __getattribute__(self, attr):
+    def __getattribute__(self, attr: str):
         '''Intercept attribute lookup for `self.access_token`: request user auth and create access_token+refresh_token if `self.refresh_token` is not defined & request a new access_token if it has expired.'''
         now = datetime.datetime.now(tz=datetime.timezone.utc).timestamp()
         if (attr == 'access_token') and (not self.refresh_token):
@@ -76,7 +77,7 @@ class Auth:
             logging.debug(f'{request.method} | {response.status} | {request.full_url} | {dict(urllib.parse.parse_qsl(request.data.decode()))}')
             return json.loads(response.read().decode('utf-8')).get('access_token')
 
-    def userAuth(self):
+    def userAuth(self) -> str:
         '''[Authorization Code Flow | Request User Authorization](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-user-authorization)'''
         # https://python.plainenglish.io/bored-of-libraries-heres-how-to-connect-to-the-spotify-api-using-pure-python-bd31e9e3d88a
         logging.warning(f'\nPlease make sure "{self.redirect_uri}" is whitelisted:\nhttps://developer.spotify.com/dashboard/{self.client_id}/settings\n')
@@ -84,7 +85,7 @@ class Auth:
         request = urllib.request.Request(method='GET', url=f'https://accounts.spotify.com/authorize?{params}')
         return input(f"Please log in and authorize the application through your browser:\n{request.full_url}\n\nand paste the 'code' parameter from the redirected url:\n")
 
-    def accessToken(self, data: dict[str, str]):
+    def accessToken(self, data: dict[str, str]) -> dict[str, typing.Any]:
         '''[Authorization Code Flow | Request Access Token](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-access-token)'''
         data = urllib.parse.urlencode(query=data).encode('utf-8')
         headers = {**self.clientAuth(), 'Content-Type': 'application/x-www-form-urlencoded'}
@@ -93,7 +94,7 @@ class Auth:
             logging.debug(f'{request.method} | {response.status} | {request.full_url} | {dict(urllib.parse.parse_qsl(request.data.decode()))}')
             return json.loads(response.read().decode('utf-8'))
 
-    def requestAccessToken(self, code: str):
+    def requestAccessToken(self, code: str) -> None:
         '''[Authorization Code Flow | Request Access Token](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-access-token)'''
         data = dict(grant_type='authorization_code', code=code, redirect_uri=self.redirect_uri)
         response = self.accessToken(data=data)
@@ -101,7 +102,7 @@ class Auth:
         self.access_token, self.refresh_token = response.get('access_token'), response.get('refresh_token')
         self.access_token_validity = datetime.datetime.now(tz=datetime.timezone.utc).timestamp() + float(response.get('expires_in'))
 
-    def refreshAccessToken(self):
+    def refreshAccessToken(self) -> None:
         '''[Authorization Code Flow | Request a refreshed Access Token](https://developer.spotify.com/documentation/web-api/tutorials/code-flow#request-a-refreshed-access-token)'''
         data = dict(grant_type='refresh_token', refresh_token=self.refresh_token)
         response = self.accessToken(data=data)
@@ -119,7 +120,7 @@ class Spotify:
         self.url = f'{self.url}{self.endpoint}'
 
     @staticmethod
-    def handleResponse(request: urllib.request.Request):
+    def handleResponse(request: urllib.request.Request) -> awkward.Record:
         '''Read and parse response to `request`.'''
         with urllib.request.urlopen(url=request) as response:
             msg = f'{request.method} | {response.status} | {request.full_url}'
@@ -128,46 +129,46 @@ class Spotify:
             return awkward.from_json(source=response) if response else response
 
     @staticmethod
-    def handleHTTPError(http_error: urllib.error.HTTPError):
+    def handleHTTPError(http_error: urllib.error.HTTPError) -> None:
         '''Read and parse `http_error`.'''
         logging.error(f'{http_error.status} | {http_error.reason} | {http_error.url}')
         if 'json' in http_error.headers.get('Content-Type', ''):
             logging.error(json.loads(http_error.read().decode('utf-8')).get('error'))
 
     @classmethod
-    def getResponse(cls, request: urllib.request.Request):
+    def response(cls, request: urllib.request.Request) -> awkward.Record:
         '''Read and parse response for `request`.'''
         try:
             return cls.handleResponse(request=request)
         except urllib.error.HTTPError as http_error:
             return cls.handleHTTPError(http_error=http_error)
 
-    def request(self, method: str, params: dict[str, typing.Any] = {}, data: dict[str, typing.Any] = {}):
+    def request(self, method: str, params: dict[str, typing.Any] = None, data: dict[str, typing.Any] = None) -> awkward.Record:
         '''Instantiate an HTTP request of a given `method` with corresponding query `params` in the url'''
-        params = {k: v for k, v in params.items() if v is not None}
-        url = urllib.parse.urlparse(url=f'{self.url}?{urllib.parse.urlencode(query=params)}')
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': f'Bearer {self.token}'}
+        params = {} if params is None else {k: v for k, v in params.items() if v is not None}
+        url = urllib.parse.urlparse(url=f'{self.url}?{urllib.parse.urlencode(query=params)}')
         if data:
             data = {k: v for k, v in data.items() if v is not None}
             data = json.dumps(data).encode('utf-8') # ["Error parsing JSON" when using Spotify API](https://stackoverflow.com/a/30100530) [Problem sending post requests to spotify api in python](https://stackoverflow.com/a/70234391)
             request = urllib.request.Request(method=method, url=urllib.parse.urlunparse(url), data=data, headers=headers)
         else:
             request = urllib.request.Request(method=method, url=urllib.parse.urlunparse(url), headers=headers)
-        return self.getResponse(request=request)
+        return self.response(request=request)
 
-    def delete(self, params: dict[str, typing.Any] = {}, data: dict[str, typing.Any] = {}):
+    def delete(self, params: dict[str, typing.Any] = None, data: dict[str, typing.Any] = None) -> awkward.Record:
         '''Instantiate an HTTP DELETE request'''
         return self.request(method='DELETE', params=params, data=data)
 
-    def get(self, **kwargs):
+    def get(self, **kwargs) -> awkward.Record:
         '''Instantiate an HTTP GET request'''
         return self.request(method='GET', params=kwargs)
 
-    def post(self, params: dict[str, typing.Any] = {}, data: dict[str, typing.Any] = {}):
+    def post(self, params: dict[str, typing.Any] = None, data: dict[str, typing.Any] = None) -> awkward.Record:
         '''Instantiate an HTTP POST request'''
         return self.request(method='POST', params=params, data=data)
 
-    def put(self, params: dict[str, typing.Any] = {}, data: dict[str, typing.Any] = {}):
+    def put(self, params: dict[str, typing.Any] = None, data: dict[str, typing.Any] = None) -> awkward.Record:
         '''Instantiate an HTTP PUT request'''
         return self.request(method='PUT', params=params, data=data)
 
@@ -512,7 +513,7 @@ class Playlist:
         url = f'https://api.spotify.com/v1/playlists/{playlist_id}/images'
         headers = {'Accept': 'application/json', 'Content-Type': 'application/json', 'Authorization': f'Bearer {self.auth.access_token}'}
         request = urllib.request.Request(method='PUT', url=url, data=image, headers=headers)
-        return Spotify.getResponse(request=request)
+        return Spotify.response(request=request)
 
 
 @dataclasses.dataclass

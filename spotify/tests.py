@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from spotify import *
+from spotify import Auth, Album, Artist, Audiobook, Category, Chapter, Episode, Genre, Market, Player, Playlist, Search, Show, Track, User
 
 auth = Auth()
 
