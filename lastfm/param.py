@@ -4,7 +4,6 @@ from __future__ import annotations
 import functools
 import typing
 
-import log
 import typ
 import api.auth
 
@@ -18,7 +17,6 @@ def params(_locals: typ.json) -> typ.json:
     '''Drop keys with no value from `_locals` and append json `format` parameter.'''
     params = {key.lower(): val for key, val in _locals.items() if val is not None}
     params.update(dict(format='json'))
-    log.log.debug(params)
     return params
 
 def required(func: typing.Callable = None) -> typing.Callable:
@@ -29,14 +27,14 @@ def required(func: typing.Callable = None) -> typing.Callable:
     return inner
 
 def listToCSV(array: list[str]) -> str:
-    '''Convert each item in `array` into a string, remove any comma characters, and join into a comma-separated string'''
+    '''Convert each item in `array` into a string, remove any comma characters, and join into a comma-separated string.'''
     array = (str(item).replace(',', '') for item in array)
     return str.join(',', array)
 
 def arrayParams(_locals: typ.json) -> typ.json:
     return {f'{field}[{i}]': val for field, array in _locals.items() for i, val in enumerate(array)}
 
-def validate(check: bool, descr: str):
-    '''Raise `ValueError` with `descr` if `check` is `False`'''
+def validate(check: bool, descr: str) -> None:
+    '''Raise `ValueError` with `descr` if `check` is `False`.'''
     if not check:
         raise ValueError(descr)
