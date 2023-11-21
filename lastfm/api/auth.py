@@ -42,7 +42,7 @@ def getMobileSession(method: str, api_key: typ.UUID, username: str, password: st
         api_key  : Required : A Last.fm API key.
     '''
     api_sig = calculate_api_sig(param.params(locals()))
-    return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
+    return request.post(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
 @pydantic.validate_arguments

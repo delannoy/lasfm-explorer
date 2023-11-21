@@ -102,7 +102,7 @@ def love(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ.U
         api_key : Required : A Last.fm API key.
     '''
     api_sig = api.auth.calculate_api_sig(param.params(locals()))
-    return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
+    return request.post(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
 @pydantic.validate_arguments
@@ -142,7 +142,7 @@ def scrobble(method: str, api_key: typ.UUID, artist: typ.artist, track: typ.trac
     params.update(param.arrayParams({k: v for k, v in params.items() if k in arrayFields}))
     _ = [params.pop(key, None) for key in arrayFields]
     params.update({"api_sig": api.auth.calculate_api_sig(params)})
-    return request.get(url=param.url, headers=param.headers, params=param.params(params))
+    return request.post(url=param.url, headers=param.headers, params=param.params(params))
 
 @param.required
 @pydantic.validate_arguments
@@ -167,7 +167,7 @@ def unlove(method: str, api_key: typ.UUID, artist: str, track: str, api_sig: typ
         api_key : Required : A Last.fm API key.
     '''
     api_sig = api.auth.calculate_api_sig(param.params(locals()))
-    return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
+    return request.post(url=param.url, headers=param.headers, params=param.params(locals()))
 
 @param.required
 @pydantic.validate_arguments
@@ -186,4 +186,4 @@ def updateNowPlaying(method: str, api_key: typ.UUID, artist: str, track: str, al
         api_key     : Required : A Last.fm API key.
     '''
     api_sig = api.auth.calculate_api_sig(param.params(locals()))
-    return request.get(url=param.url, headers=param.headers, params=param.params(locals()))
+    return request.post(url=param.url, headers=param.headers, params=param.params(locals()))
