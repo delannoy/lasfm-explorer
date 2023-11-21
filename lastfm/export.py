@@ -11,6 +11,7 @@ import logging
 import math
 import pathlib
 
+import aiofiles
 import aiometer
 import httpx
 import rich.console
@@ -93,23 +94,28 @@ class Playcount:
 class Disk:
 
     @staticmethod
-    def playcount(filepath_glob: str = '*json') -> int:
-        '''Calculate number of track plays on disk for files matching `filepath_glob`.'''
-        # [asyncio does not support asynchronous operations on the filesystem](https://github.com/python/asyncio/wiki/ThirdParty#filesystem)
-        with fileinput.input(files=EXPORT_PATH.glob(filepath_glob), mode='r') as files:
-            try:
-                return sum(len(json.loads(f).get('recenttracks').get('track')) for f in files)
-            except json.decoder.JSONDecodeError as error:
-                log.log.error(f'JSON decode error when reading exported files:\n{sorted(EXPORT_PATH.glob(filepath_glob))}\nplease remove incomplete/corrupted file(s)\n')
-                raise error
+    async def readTracks(file: pathlib.Path) -> int:
+        '''Calculate number of track plays on disk for `file`.'''
+        async with aiofiles.open(file, mode='r') as f:
+            data = await f.read()
+        try:
+            return len(json.loads(data).get('recenttracks').get('track'))
+        except json.decoder.JSONDecodeError as error:
+            log.log.error(f'JSON decode error when reading exported file:\n{file}\nplease remove incomplete/corrupted file(s)\n')
+            raise error
 
     @classmethod
-    def exported(cls, year: int, api_playcount: int) -> bool:
+    async def playcount(cls, filepath_glob: str = '*json') -> int:
+        '''Calculate number of track plays on disk for files matching `filepath_glob`.'''
+        return sum([await cls.readTracks(file) for file in EXPORT_PATH.glob(filepath_glob)])
+
+    @classmethod
+    async def exported(cls, year: int, api_playcount: int) -> bool:
         '''Check if all files corresponding to `year` have been exported with the expected number of track plays.'''
         filepath_glob = f'{year}*json'
         if not list(EXPORT_PATH.glob(filepath_glob)):
             return False
-        disk_playcount = cls.playcount(filepath_glob=filepath_glob)
+        disk_playcount = await cls.playcount(filepath_glob=filepath_glob)
         log.log.info(f'{disk_playcount} plays already exported') if (disk_playcount == api_playcount) else log.log.warning(f'export incomplete\n{disk_playcount = }\n{api_playcount = }')
         return disk_playcount == api_playcount
 
@@ -137,7 +143,8 @@ async def export(force: bool = False) -> None:
     playcount_per_year = await Playcount.overall(begin_year, current_year)
     for year in range(begin_year, current_year+1):
         rich.console.Console().rule(title=str(year))
-        if (not force) and Disk.exported(year=year, api_playcount=playcount_per_year.get(str(year))):
+        already_exported = await Disk.exported(year=year, api_playcount=playcount_per_year.get(str(year)))
+        if (not force) and already_exported:
             continue
         await exportYear(year=year)
 
