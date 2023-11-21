@@ -52,27 +52,31 @@ def jsonError(error: json.JSONDecodeError) -> None:
     log.log.debug(f'{error.pos = }')
     return log.log.error(f'json.JSONDecodeError: {error}')
 
-def request(url: str, headers: typ.json, params: typ.json) -> urllib.request.Request:
-    '''Instantiate a `GET` or `POST` HTTP request depending on `params[method]`.'''
-    if params.get('method') in ('auth.getMobileSession', 'track.love', 'track.unlove', 'track.scrobble', 'track.updateNowPlaying'):
-        return urllib.request.Request(method='POST', url=url, data=urllib.parse.urlencode(params).encode('utf-8'), headers=headers)
-    url = urllib.parse.urlparse(url=f'{url}?{urllib.parse.urlencode(query=params)}')
-    return urllib.request.Request(method='GET', url=urllib.parse.urlunparse(url), headers=headers)
-
-def get(url: str, headers: typ.json, params: typ.json, **kwargs) -> pydantic.BaseModel:
-    '''Wrapper function for `urllib.request.urlopen` GET/POST requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
-    params.update(kwargs)
-    log.log.debug(params)
+def urlopen(request: urllib.request.Request, method: str):
     try:
-        req = request(url=url, headers=headers, params=params)
-        with urllib.request.urlopen(req) as resp:
-            log.log.info(f'HTTP Request: {req.method} {resp.url} {resp.status}')
+        with urllib.request.urlopen(request) as resp:
+            log.log.info(f'HTTP Request: {request.method} {resp.url} {resp.status}')
             response = json.loads(resp.read().decode('utf-8'))
         if response:
-            return validate(response=response, method=params.get('method'))
+            return validate(response=response, method=method)
         # data = validate(response=response, method=params.get('method'))
         # return return awkward.from_json(source=data.model_dump_json(exclude_none=True)) if isinstance(data, pydantic.BaseModel) else data
     except json.JSONDecodeError as error:
         jsonError(error=error)
     except urllib.error.HTTPError as error:
         httpError(error=error)
+
+def get(url: str, headers: typ.json, params: typ.json, **kwargs) -> urllib.request.Request:
+    '''Wrapper function for `urllib.request.urlopen` GET requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
+    params.update(kwargs)
+    log.log.debug(params)
+    url = urllib.parse.urlparse(url=f'{url}?{urllib.parse.urlencode(query=params)}')
+    request =  urllib.request.Request(method='GET', url=urllib.parse.urlunparse(url), headers=headers)
+    return urlopen(request=request, method=params.get('method'))
+
+def post(url: str, headers: typ.json, params: typ.json, **kwargs) -> urllib.request.Request:
+    '''Wrapper function for `urllib.request.urlopen` POST requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
+    params.update(kwargs)
+    log.log.debug(params)
+    request = urllib.request.Request(method='POST', url=url, data=urllib.parse.urlencode(params).encode('utf-8'), headers=headers)
+    return urlopen(request=request, method=params.get('method'))
