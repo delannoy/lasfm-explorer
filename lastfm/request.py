@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 import json
-import pathlib
 import urllib.error
 import urllib.parse
 import urllib.request
 
-import awkward
+# import awkward
 import pydantic
-import rich.progress
 
 import api.errors
 import api.models
@@ -16,6 +14,7 @@ import log
 import typ
 
 def validate(response: typ.json, method: str) -> pydantic.BaseModel:
+    '''Determine the top level `entity` in the response and call the corresponding model to validate it.'''
     if len(response) != 1:
         return response
     entity = next(iter(response))
@@ -25,7 +24,8 @@ def validate(response: typ.json, method: str) -> pydantic.BaseModel:
     model = getattr(module, entity.capitalize())
     return model(**response)
 
-def parse_error(error: typ.json):
+def parseError(error: typ.json) -> None:
+    '''Log error information from `api.errors.Errors` corresponding to `error`.'''
     response = json.loads(error)
     if response.get('error') in {e.value for e in api.errors.Errors}:
         error_enum = api.errors.Errors(response.get('error'))
@@ -33,7 +33,7 @@ def parse_error(error: typ.json):
         log.log.error(f'{error_enum.__doc__ = }')
     log.log.error(f'{response = }')
 
-def http_error(error: urllib.error.HTTPError):
+def httpError(error: urllib.error.HTTPError) -> None:
     '''Log `urllib.error.HTTPError`. Log corresponding `__doc__` string from `api.errors.Errors` enum.'''
     log.log.debug(f'{error.code = }')
     log.log.debug(f'{error.reason = }')
@@ -41,9 +41,9 @@ def http_error(error: urllib.error.HTTPError):
     response = error.read().decode('utf-8')
     if 'json' not in error.headers.get('Content-Type'):
         return log.log.error(f'{response = }')
-    parse_error(error=response)
+    return parseError(error=response)
 
-def json_error(error: json.JSONDecodeError):
+def jsonError(error: json.JSONDecodeError) -> None:
     '''Log `json.JSONDecodeError`.'''
     log.log.debug(f'{error.doc = }')
     log.log.debug(f'{error.msg = }')
@@ -52,53 +52,27 @@ def json_error(error: json.JSONDecodeError):
     log.log.debug(f'{error.pos = }')
     return log.log.error(f'json.JSONDecodeError: {error}')
 
-def get(url: str, headers: typ.json = pydantic.Field(default_factory=dict), params: typ.json = pydantic.Field(default_factory=dict), **kwargs) -> typ.response:
-    '''Wrapper function for `urllib.request.urlopen` GET requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
-    data = urllib.parse.urlencode({**params, **kwargs})
+def request(url: str, headers: typ.json, params: typ.json) -> urllib.request.Request:
+    '''Instantiate a `GET` or `POST` HTTP request depending on `params[method]`.'''
+    if params.get('method') in ('auth.getMobileSession', 'track.love', 'track.unlove', 'track.scrobble', 'track.updateNowPlaying'):
+        return urllib.request.Request(method='POST', url=url, data=urllib.parse.urlencode(params).encode('utf-8'), headers=headers)
+    url = urllib.parse.urlparse(url=f'{url}?{urllib.parse.urlencode(query=params)}')
+    return urllib.request.Request(method='GET', url=urllib.parse.urlunparse(url), headers=headers)
+
+def get(url: str, headers: typ.json, params: typ.json, **kwargs) -> pydantic.BaseModel:
+    '''Wrapper function for `urllib.request.urlopen` GET/POST requests which accepts URL parameters from the union of `params` and `kwargs` dictionaries.'''
+    params.update(kwargs)
+    log.log.debug(params)
     try:
-        if params.get('method') in ('track.love', 'track.unlove', 'track.scrobble', 'track.updateNowPlaying'):
-            request = urllib.request.Request(url=url, data=data.encode('utf-8'), headers=headers) # HTTP POST request
-        else:
-            request = urllib.request.Request(url=f'{url}?{data}', headers=headers)
-        with urllib.request.urlopen(request) as response:
-            log.log.info(f'HTTP Request: {request.get_method()} {request.full_url} {response.status}')
-            response = json.loads(response.read().decode('utf-8'))
-        if not response:
-            return
-        data = validate(response=response, method=params.get('method'))
-        return awkward.from_json(source=data.json(exclude_none=True)) if isinstance(data, pydantic.BaseModel) else data
+        req = request(url=url, headers=headers, params=params)
+        with urllib.request.urlopen(req) as resp:
+            log.log.info(f'HTTP Request: {req.method} {resp.url} {resp.status}')
+            response = json.loads(resp.read().decode('utf-8'))
+        if response:
+            return validate(response=response, method=params.get('method'))
+        # data = validate(response=response, method=params.get('method'))
+        # return return awkward.from_json(source=data.model_dump_json(exclude_none=True)) if isinstance(data, pydantic.BaseModel) else data
     except json.JSONDecodeError as error:
-        json_error(error=error)
+        jsonError(error=error)
     except urllib.error.HTTPError as error:
-        http_error(error=error)
-
-def download(filepath: pathlib.Path, url: str, headers: typ.json = pydantic.Field(default_factory=dict), params: typ.json = pydantic.Field(default_factory=dict), **kwargs) -> None:
-    '''Wrapper function to download the response to a GET request with a `rich` progress bar.'''
-    # https://github.com/Textualize/rich/blob/master/examples/downloader.py
-    url = f'{url}?{urllib.parse.urlencode({**params, **kwargs})}'
-    try:
-        response = urllib.request.urlopen(urllib.request.Request(url=url, headers=headers))
-    except urllib.error.HTTPError as error:
-        return http_error(error=error)
-
-    # [Progress Display](https://rich.readthedocs.io/en/stable/progress.html)
-    progress = rich.progress.Progress( # [rich.progress.Progress](https://rich.readthedocs.io/en/stable/reference/progress.html#rich.progress.Progress)
-                rich.progress.TextColumn("[bold blue]{task.fields[filename]}", justify="right"),
-                rich.progress.BarColumn(bar_width=None),
-                '[progress.percentage]{task.percentage:>3.1f}%', '|', rich.progress.DownloadColumn(), '|', rich.progress.TransferSpeedColumn(), '|', rich.progress.TimeRemainingColumn(),
-                refresh_per_second=10, # Number of times per second to refresh the progress information or None to use default (10).
-                speed_estimate_period=1, # Period (in seconds) used to calculate the speed estimate. Defaults to 30.
-                transient=False, # Clear the progress on exit. Defaults to False.
-                expand=True, # Expand tasks table to fit width. Defaults to False.
-                )
-
-    task_id = progress.add_task(description="download", start=False, filename=filepath)
-    progress.console.log(f"Requesting {url}")
-    progress.update(task_id=task_id, total=float(response.headers.get('Content-length')))
-    with progress:
-        with open(filepath, mode='wb') as out_file:
-            progress.start_task(task_id=task_id)
-            for chunk in iter(lambda: response.read(2**10), b''):
-                out_file.write(chunk)
-                progress.update(task_id=task_id, advance=len(chunk))
-        progress.console.log(f'Downloaded {filepath}')
+        httpError(error=error)
