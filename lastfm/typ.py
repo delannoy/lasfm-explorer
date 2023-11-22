@@ -9,7 +9,7 @@ import dateparser
 import pydantic
 
 
-class Bool():
+class Bool:
 
     def __init__(self, value):
         self.value = value
