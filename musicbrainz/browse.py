@@ -385,7 +385,7 @@ class Inc:
         ARTIST_CREDITS = 'artist-credits' # requires `release-rels`, `recording-rels`, or `release-group-rels`
 
 
-def browse(entity: str, linked_entity: dict[str, uuid.UUID] = None, inc: list[str] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
+def browse(entity: api.CoreEntities|api.NonCoreEntities, linked_entity: dict[str, uuid.UUID] = None, inc: list[str] = None, type: list[api.Release.Type] = None, status: list[api.Release.Status] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
     linked_entity = linked_entity if linked_entity else kwargs
     inc = str.join('+', inc) if inc else None
     type = str.join('|', type) if type else None
@@ -393,40 +393,40 @@ def browse(entity: str, linked_entity: dict[str, uuid.UUID] = None, inc: list[st
     return request.get(endpoint=f'/{entity}', inc=inc, type=type, status=status, offset=offset, limit=limit, **linked_entity)
 
 def area(linked_entity: dict[LinkedEntity.Area, uuid.UUID] = None, inc: list[Inc.Area] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='area', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.AREA, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def artist(linked_entity: dict[LinkedEntity.Artist, uuid.UUID] = None, inc: list[Inc.Artist] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='artist', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.ARTIST, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def collection(linked_entity: dict[LinkedEntity.Collection, uuid.UUID|str] = None, inc: list[Inc.Collection] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='collection', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.NonCoreEntities.COLLECTION, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def event(linked_entity: dict[LinkedEntity.Event, uuid.UUID] = None, inc: list[Inc.Event] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='event', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.EVENT, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def instrument(linked_entity: dict[LinkedEntity.Instrument, uuid.UUID] = None, inc: list[Inc.Instrument] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='instrument', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.INSTRUMENT, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def label(linked_entity: dict[LinkedEntity.Label, uuid.UUID] = None, inc: list[Inc.Label] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='label', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.LABEL, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def place(linked_entity: dict[LinkedEntity.Place, uuid.UUID] = None, inc: list[Inc.Place] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='place', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.PLACE, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def recording(linked_entity: dict[LinkedEntity.Recording, uuid.UUID] = None, inc: list[Inc.Recording] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='recording', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.RECORDING, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
-def release(linked_entity: dict[LinkedEntity.Release, uuid.UUID] = None, inc: list[Inc.Release] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='release', linked_entity=linked_entity, inc=inc, type=type, status=status, offset=offset, limit=limit, **kwargs)
+def release(linked_entity: dict[LinkedEntity.Release, uuid.UUID] = None, inc: list[Inc.Release] = None, type: list[api.Release.Type] = None, status: list[api.Release.Status] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
+    return browse(entity=api.CoreEntities.RELEASE, linked_entity=linked_entity, inc=inc, type=type, status=status, offset=offset, limit=limit, **kwargs)
 
-def release_group(linked_entity: dict[LinkedEntity.Release_group, uuid.UUID] = None, inc: list[Inc.Release_group] = None, type: list[api.ReleaseType] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='release-group', linked_entity=linked_entity, inc=inc, type=type, offset=offset, limit=limit, **kwargs)
+def release_group(linked_entity: dict[LinkedEntity.Release_group, uuid.UUID] = None, inc: list[Inc.Release_group] = None, type: list[api.Release.Type] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
+    return browse(entity=api.CoreEntities.RELEASE_GROUP, linked_entity=linked_entity, inc=inc, type=type, offset=offset, limit=limit, **kwargs)
 
 def series(linked_entity: dict[LinkedEntity.Series, uuid.UUID] = None, inc: list[Inc.Series] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='series', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.SERIES, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def work(linked_entity: dict[LinkedEntity.Work, uuid.UUID] = None, inc: list[Inc.Work] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='work', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.WORK, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
 
 def url(linked_entity: dict[LinkedEntity.Url, str] = None, inc: list[Inc.Url] = None, offset: int = 0, limit: int = 25, **kwargs) -> awkward.Record:
-    return browse(entity='url', linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)
+    return browse(entity=api.CoreEntities.URL, linked_entity=linked_entity, inc=inc, offset=offset, limit=limit, **kwargs)

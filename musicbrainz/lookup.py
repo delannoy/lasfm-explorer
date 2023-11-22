@@ -419,10 +419,10 @@ class Inc:
         WORK_RELS = 'work-rels'
 
 
-def genreAll(limit: int = None, offset: int = 0, fmt: str = None) -> awkward.Record:
-    return request.get(endpoint='/genre/all', limit=limit, offset=offset)
+def genreAll(offset: int = 0, limit: int = None, fmt: str = None) -> awkward.Record:
+    return request.get(endpoint='/genre/all', offset=offset, limit=limit)
 
-def lookup(entity: str, mbid: uuid.UUID, inc: list[str] = None, collection_type: CollectionType = '', type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None) -> awkward.Record:
+def lookup(entity: api.CoreEntities|api.NonCoreEntities, mbid: uuid.UUID, inc: list[str] = None, collection_type: CollectionType = '', type: list[api.Release.Type] = None, status: list[api.Release.Status] = None) -> awkward.Record:
     endpoint = f'/{entity}/{mbid}' if (not collection_type) else f'/{entity}/{mbid}/{collection_type}'
     inc = str.join('+', inc) if inc else None
     type = str.join('|', type) if type else None
@@ -430,46 +430,46 @@ def lookup(entity: str, mbid: uuid.UUID, inc: list[str] = None, collection_type:
     return request.get(endpoint=endpoint, inc=inc, type=type, status=status)
 
 def area(mbid: uuid.UUID, inc: list[Inc.Area] = None) -> awkward.Record:
-    return lookup(entity='area', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.AREA, mbid=mbid, inc=inc)
 
-def artist(mbid: uuid.UUID, inc: list[Inc.Artist] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None) -> awkward.Record:
-    return lookup(entity='artist', mbid=mbid, inc=inc, type=type, status=status)
+def artist(mbid: uuid.UUID, inc: list[Inc.Artist] = None, type: list[api.Release.Type] = None, status: list[api.Release.Status] = None) -> awkward.Record:
+    return lookup(entity=api.CoreEntities.ARTIST, mbid=mbid, inc=inc, type=type, status=status)
 
 def collection(mbid: uuid.UUID, collection_type: CollectionType = '', inc: list[Inc.Collection] = None) -> awkward.Record:
-    return lookup(entity='collection', collection_type=collection_type, mbid=mbid, inc=inc)
+    return lookup(entity=api.NonCoreEntities.COLLECTION, collection_type=collection_type, mbid=mbid, inc=inc)
 
 def event(mbid: uuid.UUID, inc: list[Inc.Event] = None) -> awkward.Record:
-    return lookup(entity='event', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.EVENT, mbid=mbid, inc=inc)
 
 def genre(mbid: uuid.UUID) -> awkward.Record:
-    return lookup(entity='genre', mbid=mbid)
+    return lookup(entity=api.CoreEntities.GENRE, mbid=mbid)
 
 def instrument(mbid: uuid.UUID, inc: list[Inc.Instrument] = None) -> awkward.Record:
-    return lookup(entity='instrument', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.INSTRUMENT, mbid=mbid, inc=inc)
 
-def label(mbid: uuid.UUID, inc: list[Inc.Label] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None) -> awkward.Record:
-    return lookup(entity='label', mbid=mbid, inc=inc, type=type, status=status)
+def label(mbid: uuid.UUID, inc: list[Inc.Label] = None, type: list[api.Release.Type] = None, status: list[api.Release.Status] = None) -> awkward.Record:
+    return lookup(entity=api.CoreEntities.LABEL, mbid=mbid, inc=inc, type=type, status=status)
 
 def place(mbid: uuid.UUID, inc: list[Inc.Place] = None) -> awkward.Record:
-    return lookup(entity='place', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.PLACE, mbid=mbid, inc=inc)
 
-def recording(mbid: uuid.UUID, inc: list[Inc.Recording] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None) -> awkward.Record:
-    return lookup(entity='recording', mbid=mbid, inc=inc, type=type, status=status)
+def recording(mbid: uuid.UUID, inc: list[Inc.Recording] = None, type: list[api.Release.Type] = None, status: list[api.Release.Status] = None) -> awkward.Record:
+    return lookup(entity=api.CoreEntities.RECORDING, mbid=mbid, inc=inc, type=type, status=status)
 
-def release(mbid: uuid.UUID, inc: list[Inc.Release] = None, type: list[api.ReleaseType] = None) -> awkward.Record:
-    return lookup(entity='release', mbid=mbid, inc=inc, type=type)
+def release(mbid: uuid.UUID, inc: list[Inc.Release] = None, type: list[api.Release.Type] = None) -> awkward.Record:
+    return lookup(entity=api.CoreEntities.RELEASE, mbid=mbid, inc=inc, type=type)
 
-def release_group(mbid: uuid.UUID, inc: list[Inc.Release_group] = None, type: list[api.ReleaseType] = None, status: list[api.ReleaseStatus] = None) -> awkward.Record:
-    return lookup(entity='release-group', mbid=mbid, inc=inc, type=type, status=status)
+def release_group(mbid: uuid.UUID, inc: list[Inc.Release_group] = None, type: list[api.Release.Type] = None, status: list[api.Release.Status] = None) -> awkward.Record:
+    return lookup(entity=api.CoreEntities.RELEASE_GROUP, mbid=mbid, inc=inc, type=type, status=status)
 
 def series(mbid: uuid.UUID, inc: list[Inc.Series] = None) -> awkward.Record:
-    return lookup(entity='series', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.SERIES, mbid=mbid, inc=inc)
 
 def url(mbid: uuid.UUID = None, inc: list[Inc.Url] = None) -> awkward.Record:
-    return lookup(entity='url', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.URL, mbid=mbid, inc=inc)
 
 def work(mbid: uuid.UUID, inc: list[Inc.Work] = None) -> awkward.Record:
-    return lookup(entity='work', mbid=mbid, inc=inc)
+    return lookup(entity=api.CoreEntities.WORK, mbid=mbid, inc=inc)
 
 # [Non-MBID Lookups](https://musicbrainz.org/doc/MusicBrainz_API#Non-MBID_Lookups)
 
