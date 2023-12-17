@@ -26,9 +26,8 @@ import param
 
 # to do:
     # export in series (urllib) if `httpx` is unavailable?
+    # change `httpx` logging `INFO` format to `DEBUG`?
     # async/parallelize all years
-
-log.log.setLevel(logging.getLevelName('INFO'))
 
 PARAMS = {'method': 'user.getRecentTracks', 'api_key': auth.api_key, 'user': auth.user, 'format': 'json', 'limit': 1000}
 EXPORT_PATH = pathlib.Path(f"data/{PARAMS.get('user')}/RecentTracks")
@@ -78,19 +77,20 @@ class Disk:
 class Playcount:
 
     @staticmethod
-    async def annual(year: int) -> int:
+    async def annual(year: int, async_client: httpx.AsyncClient) -> int:
         '''Query playcount for `year`'''
         FROM, TO = yearRange(year=year)
         url = httpx.URL(url=param.url, params={**PARAMS, 'from': FROM, 'to': TO, 'page': 1, 'limit': 1})
-        async with httpx.AsyncClient(timeout=HTTPX_TIMEOUT) as async_client:
-            response = await async_client.get(url=url)
+        response = await async_client.get(url=url)
         return int(response.json().get('recenttracks').get('@attr').get('total'))
 
     @classmethod
     async def overall(cls, begin_year: int, end_year: int) -> dict[str, int]:
-        '''Query playcount for all years between `begin_year` and `end_year`.'''
-        jobs = [functools.partial(cls.annual, year=year) for year in range(begin_year, end_year+1)]
-        playcount = await aiometer.run_all(jobs, max_per_second=1/param.sleep)
+        '''Query playcount per year between `begin_year` and `end_year`.'''
+        log.log.info(f'Querying playcount per year for {begin_year}-{end_year}')
+        async with httpx.AsyncClient(timeout=HTTPX_TIMEOUT) as async_client:
+            jobs = [functools.partial(cls.annual, year=year, async_client=async_client) for year in range(begin_year, end_year+1)]
+            playcount = await aiometer.run_all(jobs, max_per_second=1/param.sleep)
         year = list(map(str, range(begin_year, end_year+1)))
         return dict(zip(year, playcount))
 
@@ -100,11 +100,12 @@ class Response:
     url: httpx.URL
     progress: rich.progress.Progress
     task: rich.progress.Task
+    async_client: httpx.AsyncClient
 
     async def collect(self) -> dict[str, typing.Any]:
         '''Stream async GET request with `rich.progress`.'''
         data = bytearray()
-        async with httpx.AsyncClient(timeout=HTTPX_TIMEOUT).stream(method='GET', url=self.url, headers=param.headers) as response:
+        async with self.async_client.stream(method='GET', url=self.url, headers=param.headers) as response:
             self.task.total = int(response.headers.get('Content-Length'))
             async for chunk in response.aiter_bytes():
                 data.extend(chunk)
@@ -181,8 +182,9 @@ async def exportYear(year: int) -> None:
     progress = rich.progress.Progress(*PROGRESS_COLS)
     _ = [progress.add_task(description=f'{year}-{page:03d}') for page, url in enumerate(urls, start=1)]
     with rich.live.Live(progress):
-        jobs = [Response(url=url, progress=progress, task=progress.tasks[task_id]).download for task_id, url in enumerate(urls)]
-        await aiometer.run_all(jobs, max_per_second=1/param.sleep)
+        async with httpx.AsyncClient(timeout=HTTPX_TIMEOUT) as async_client:
+            jobs = [Response(url=url, progress=progress, task=progress.tasks[task_id], async_client=async_client).download for task_id, url in enumerate(urls)]
+            await aiometer.run_all(jobs, max_per_second=1/param.sleep)
 
 async def export(force: bool = False) -> None:
     '''Export all last.fm data for `PARAMS['user']`.'''
@@ -190,18 +192,21 @@ async def export(force: bool = False) -> None:
     begin_year = user.getRecentTracks(user=PARAMS.get('user'), limit=1, page=playcount_total).track[-1].date.dateTime.year
     current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
     playcount_per_year = await Playcount.overall(begin_year, current_year)
+    already_exported = dict()
     for year in range(begin_year, current_year+1):
         rich.console.Console().rule(title=str(year))
-        already_exported = await Disk.exported(year=year, api_playcount=playcount_per_year.get(str(year)))
-        if (not force) and already_exported:
+        already_exported[year] = await Disk.exported(year=year, api_playcount=playcount_per_year.get(str(year)))
+        if (not force) and already_exported.get(year):
             continue
         await exportYear(year=year)
+    return already_exported
 
 def main() -> None:
     '''Export data asynchronously.'''
     EXPORT_PATH.mkdir(parents=True, exist_ok=True)
-    asyncio.run(export())
-    Serialize().pdToFeather()
+    already_exported = asyncio.run(export())
+    if not all(already_exported.values()):
+        Serialize().pdToFeather()
 
 if __name__ == '__main__':
     main()
