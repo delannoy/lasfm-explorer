@@ -2,47 +2,80 @@
 
 from __future__ import annotations
 import dataclasses
+import http.cookiejar
 import logging
 import os
+import urllib
 
-import httpx
 import lxml.html
 import pandas
 import rich.console
 import rich.table
 
 import api.auth
+import explore
 import log
 
 log.log.setLevel(logging.getLevelName('INFO'))
 
+USER_AGENT = os.getenv('USERAGENT', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36')
+
 def neighbors(user: str = api.auth.user) -> pandas.DataFrame:
     '''Parse lastFM neighbors page for {user}.'''
-    etree = lxml.html.fromstring(httpx.get(url=f'https://www.last.fm/user/{user}/neighbours').text)
+    response = urllib.request.urlopen(url=f'https://www.last.fm/user/{user}/neighbours').read().decode('utf-8')
+    etree = lxml.html.fromstring(response)
     users = [user.text for user in etree.cssselect(expr='a.user-list-link')]
     artists = [[artist.text for artist in user.cssselect(expr='a')] for user in etree.cssselect(expr='p.user-list-shared-artists')]
     data = pandas.DataFrame({'user': users, 'artists_in_common': artists})
     rich.console.Console().print(Recommended.table(data=data, title='Neighbors'))
 
+def login() -> http.cookiejar.CookieJar:
+    # [How do I post to a Django 1.2 form using urllib?](https://stackoverflow.com/a/3624151)
+    url = 'https://www.last.fm/login'
+    cookie_jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+    urllib.request.install_opener(opener)
+    csrf_response = urllib.request.urlopen(urllib.request.Request(method='GET', url=url, headers={'User-Agent': USER_AGENT}))
+    csrftoken = {c.name: c.value for c in cookie_jar}.get('csrftoken')
+    data = urllib.parse.urlencode(dict(csrfmiddlewaretoken=csrftoken, username_or_email=api.auth.user, password=os.getenv('LASTFM_PASSWORD'))).encode()
+    request = urllib.request.Request(method='POST', url=url, data=data, headers={'User-Agent': USER_AGENT, 'Referer': url})
+    response = urllib.request.urlopen(request)
+    return cookie_jar
+
+def removeScrobble(cookie_jar: http.cookiejar.CookieJar, artist: str, track: str, date_uts: int):
+    url = f'https://www.last.fm/user/{api.auth.user}/library'
+    csrftoken = {c.name: c.value for c in cookie_jar}.get('csrftoken')
+    data = urllib.parse.urlencode(dict(csrfmiddlewaretoken=csrftoken, artist_name=artist, track_name=track, timestamp=date_uts)).encode()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cookie_jar))
+    urllib.request.install_opener(opener)
+    request = urllib.request.Request(method='POST', url=f'{url}/delete', data=data, headers={'User-Agent': USER_AGENT, 'Referer': url})
+    return urllib.request.urlopen(request)
+
+def deleteDuplicates(year: int = None):
+    data = explore.exported()
+    if year:
+        data = data[(data.date >= f'{year}-01-01') & (data.date <= f'{year}-12-31')].reset_index(drop=True)
+    duplicate_tracks = data[((data.artist+data.album+data.track) == (data.artist+data.album+data.track).shift(1)) & (data.date_uts.diff() <= 30)].reset_index(drop=True)
+    if input(f'will delete {duplicate_tracks.shape[0]} scrobbles. proceed? ').lower() not in ('y', 'yes'):
+        return
+    cookie_jar = login()
+    for idx, track in duplicate_tracks.iterrows():
+        print(track[['date','artist', 'track']].to_dict())
+        track = track[['date_uts','artist', 'track']].to_dict()
+        removeScrobble(cookie_jar=cookie_jar, **track)
+
 
 @dataclasses.dataclass
 class Recommended:
-    url: str = httpx.URL('https://www.last.fm/music/+recommended')
+    url: str = 'https://www.last.fm/music/+recommended' # httpx.URL('https://www.last.fm/music/+recommended')
 
     def __post_init__(self):
-        self.client = self.login()
+        self.cookie_jar = login()
 
-    def login(self) -> httpx.Client:
-        # [How to "log in" to a website using Python's Requests module?](https://stackoverflow.com/a/17633072)
-        # [python-requests and django - CSRF verification failed. Request aborted](https://stackoverflow.com/a/20252654)
-        url = httpx.URL('https://www.last.fm/login')
-        client = httpx.Client()
-        csrftoken = client.get(url=url).cookies.get('csrftoken')
-        data = dict(csrfmiddlewaretoken=csrftoken, username_or_email=api.auth.user, password=os.getenv('LASTFM_PASSWORD'))
-        user_agent = os.getenv('USERAGENT', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36')
-        headers = httpx.Headers({'User-Agent': user_agent, 'Referer': str(url)})
-        response = client.post(url=url, data=data, headers=headers)
-        return client
+    def get(self, url: str) -> lxml.html.HtmlElement:
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookie_jar))
+        response = opener.open(url)
+        return lxml.html.fromstring(response.read().decode('utf-8'))
 
     @staticmethod
     def table(data: pandas.DataFrame, title: str) -> rich.table.Table:
@@ -53,7 +86,8 @@ class Recommended:
         return table
 
     def albums(self, page: int = 1) -> pandas.DataFrame:
-        etree = lxml.html.fromstring(self.client.get(url=f'{self.url}/albums?page={page}').text)
+        page = urllib.parse.urlencode(dict(page=page))
+        etree = self.get(f'{self.url}/albums?{page}')
         buffer = etree.cssselect(expr='div.col-main div.link-block')
         albums = [e.cssselect('h3 a')[0].text for e in buffer]
         artists = [e.cssselect('p a')[0].text for e in buffer]
@@ -64,7 +98,8 @@ class Recommended:
         rich.console.Console().print(self.table(data=data, title=f'{self.__class__.__name__} Albums'))
 
     def artists(self, page: int = 1) -> pandas.DataFrame:
-        etree = lxml.html.fromstring(self.client.get(url=f'{self.url}/artists?page={page}').text)
+        page = urllib.parse.urlencode(dict(page=page))
+        etree = self.get(f'{self.url}/artists?{page}')
         buffer = etree.cssselect(expr='div.col-main ul li.link-block')
         artists = [e.cssselect('h3 a')[0].text for e in buffer]
         tags = [[tag.text for tag in e.cssselect('li.tag a')] for e in buffer]
@@ -75,7 +110,8 @@ class Recommended:
         rich.console.Console().print(self.table(data=data, title=f'{self.__class__.__name__} Artists'))
 
     def rediscover(self, page: int = 1) -> pandas.DataFrame:
-        etree = lxml.html.fromstring(self.client.get(url=f'{self.url}/rediscover?page={page}').text)
+        page = urllib.parse.urlencode(dict(page=page))
+        etree = self.get(f'{self.url}/rediscover?{page}')
         buffer = etree.cssselect(expr='div.col-main li.link-block')
         artists = [e.cssselect('h3 a')[0].text for e in buffer]
         tags = [[tag.text for tag in e.cssselect('li.tag a')] for e in buffer]
@@ -86,7 +122,8 @@ class Recommended:
         rich.console.Console().print(self.table(data=data, title='Rediscover'))
 
     def tags(self, page: int = 1) -> pandas.DataFrame:
-        etree = lxml.html.fromstring(self.client.get(url=f'{self.url}/tags?page={page}').text)
+        page = urllib.parse.urlencode(dict(page=page))
+        etree = self.get(f'{self.url}/tags?{page}')
         buffer = etree.cssselect(expr='div.col-main div.link-block')
         tags = [e.cssselect('h3 a')[0].text for e in buffer]
         artists = [[_.text for _ in e.cssselect('p a')] for e in buffer]
@@ -94,7 +131,8 @@ class Recommended:
         rich.console.Console().print(self.table(data=data, title=f'{self.__class__.__name__} Tags'))
 
     def tracks(self, page: int = 1) -> pandas.DataFrame:
-        etree = lxml.html.fromstring(self.client.get(url=f'{self.url}/tracks?page={page}').text)
+        page = urllib.parse.urlencode(dict(page=page))
+        etree = self.get(f'{self.url}/tracks?{page}')
         buffer = etree.cssselect(expr='div.col-main div.link-block')
         tracks = [e.cssselect('h3 a')[0].text for e in buffer]
         artists = [e.cssselect('p a')[0].text for e in buffer]
