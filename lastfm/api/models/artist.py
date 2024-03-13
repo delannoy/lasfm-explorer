@@ -57,7 +57,7 @@ class Stats(common.BaseModel):
 
 
 class SimilarArtistInfo(common.BaseModel):
-    name: str
+    name: typing.Optional[str] # ugh https://www.last.fm/music/None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
 
