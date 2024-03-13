@@ -1,17 +1,24 @@
 #!/usr/bin/env python3
 
 import hashlib
-import logging
 import os
 
+import rich.traceback
 import pydantic
 
+import log
 import param
 import request
 import typ
 
-user = os.getenv('LASTFM_USER')
-password = os.getenv('LASTFM_PASSWORD')
+rich.traceback.install(show_locals=False, max_frames=10)
+
+try:
+    user = os.environ['LASTFM_USER']
+    password = os.getenv('LASTFM_PASSWORD')
+except KeyError as error:
+    log.log.error('Please define you last.fm username as an environment variable:\nexport LASTFM_USER=your_username')
+    raise error
 
 # [Create API account](https://www.last.fm/api/account/create)
 # [API Applications(https://www.last.fm/api/accounts)
@@ -73,4 +80,4 @@ def main():
     if confirm.lower() in ('y', 'yes', 'yep'):
         sk = getSession(token=token)
         if sk:
-            logging.warning(f'Session key: {sk}\n(store it securely and set as `LASTFM_SESSION_KEY` environment variable)')
+            log.log.warning(f'Session key: {sk}\n(store it securely and set as `LASTFM_SESSION_KEY` environment variable)')
