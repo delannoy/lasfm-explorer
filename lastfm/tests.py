@@ -26,8 +26,8 @@ languages = ['fr', 'es']
 tags = ['metal', 'manchester']
 usernames = ['rj', Auth.username]
 
-limit = 4
-page = 2
+limit = 33
+page = 10
 FROM = 1555555555
 TO = 1666666666
 
@@ -42,6 +42,7 @@ def testAlbum():
     [album.getTopTags(artist=_, album=__) for _, __ in zip(artists, albums)]
     [album.getTopTags(artist=Misspelt.artist, album=Misspelt.album, autocorrect=_) for _ in (False, True)]
     [album.search(album=_, limit=limit, page=page) for _ in albums]
+    album.search(album=albums[0], limit=101, page=100)
 
 def testArtist():
     artist.addTags(artist='_', tags=(0,1,2,3,4,5))
@@ -60,27 +61,36 @@ def testArtist():
     [artist.getTopTags(artist=Misspelt.artist, autocorrect=_) for _ in (False, True)]
     [artist.getTopTracks(artist=_, limit=limit, page=page) for _ in artists]
     [artist.getTopTracks(artist=Misspelt.artist, autocorrect=_) for _ in (False, True)]
+    artist.getTopTracks(artist=artists[0], limit=101, page=100)
     [artist.search(artist=_, limit=limit, page=page) for _ in artists]
 
 def testChart():
     chart.getTopArtists(limit=limit, page=page)
+    [chart.getTopArtists(limit=l, page=p) for l in range(1,10) for p in range(1,10)]
     chart.getTopTags(limit=limit, page=page)
     chart.getTopTracks(limit=limit, page=page)
+    [chart.getTopTracks(limit=l, page=p) for l in range(1,10) for p in range(1,10)]
 
 def testGeo():
     [geo.getTopArtists(country=_, limit=limit, page=page) for _ in countries]
+    geo.getTopArtists(countries[0], limit=100, page=100)
     [geo.getTopTracks(country=_, limit=limit, page=page) for _ in countries]
+    geo.getTopTracks(countries[0], limit=100, page=100)
 
 def testLibrary():
     [library.getArtists(user=_, limit=limit, page=page) for _ in usernames]
+    assert len(library.getArtists(user='rj', limit=100, page=124).artist) == 100
 
 def testTag():
     [tag.getInfo(tag=_, lang=languages[0]) for _ in tags]
     [tag.getSimilar(tag=_) for _ in tags] # `tag.getSimilar` seems to be broken; no data returned
     [tag.getTopAlbums(tag=_, limit=limit, page=page) for _ in tags]
+    tag.getTopAlbums(tag=tags[0], limit=10, page=100)
     [tag.getTopArtists(tag=_, limit=limit, page=page) for _ in tags]
+    tag.getTopArtists(tag=tags[0], limit=10, page=10)
     tag.getTopTags()
     [tag.getTopTracks(tag=_, limit=limit, page=page) for _ in tags]
+    tag.getTopTracks(tag=tags[0], limit=101, page=100)
     [tag.getWeeklyChartList(tag=_) for _ in tags]
 
 def testTrack():
@@ -92,6 +102,7 @@ def testTrack():
     [track.getInfo(artist=Misspelt.artist, track=Misspelt.track, autocorrect=_) for _ in (False, True)]
     [track.getSimilar(artist=_, track=__, limit=limit) for _, __ in zip(artists, tracks)]
     [track.getSimilar(artist=Misspelt.artist, track=Misspelt.track, limit=limit, autocorrect=_) for _ in (False, True)]
+    track.getSimilar(artist=artists[1], track=tracks[1], limit=300)
     [track.getTags(artist=_, track=__, user=usernames[0]) for _, __ in zip(artists, tracks)]
     [track.getTags(artist=Misspelt.artist, track=Misspelt.track, user=usernames[0], autocorrect=_) for _ in (False, True)]
     [track.getTopTags(artist=_, track=__) for _, __ in zip(artists, tracks)]
@@ -100,26 +111,35 @@ def testTrack():
     track.unlove(artist='_', track='_')
     track.scrobble(artist=['artist0', 'artist1', 'artist2'], album=['album0', 'album1', 'album2'], track=['track0', 'track1', 'track2'], timestamp=['1970-01-01 12:00:00','1970-01-01 13:00:00', '1970-01-01 14:00:00'])
     [track.search(artist=_, track=__, limit=limit, page=page) for _, __ in zip(artists, tracks)]
+    track.search(artist=artists[1], track=tracks[1], limit=3, page=10)
     track.updateNowPlaying(artist=artists[1], album=albums[1], track=tracks[1])
 
 def testUser():
     [user.getFriends(user=usernames[0], recenttracks=_, limit=limit, page=page) for _ in (False, True)]
+    assert len(user.getFriends(user='cdog215', limit=100, page=99).user) == 100
     [user.getInfo(user=_) for _ in usernames]
     [user.getLovedTracks(user=_, limit=limit, page=page) for _ in usernames]
-    [user.getPersonalTags(user=usernames[0], tag=tags[0], taggingtype=_) for _ in TaggingType]
+    assert len(user.getLovedTracks(user='cdog215', limit=100, page=239).track) == 100
+    [user.getPersonalTags(user=usernames[0], tag=tags[0], taggingtype=_) for _ in Type.taggingtype]
+    user.getPersonalTags(tag=tags[1], taggingtype='artist', limit=10, page=1)
     [user.getRecentTracks(user=usernames[0], FROM=FROM, TO=TO, extended=extended, limit=limit, page=page) for extended in (False, True)]
+    assert len(user.getRecentTracks(user='cdog215', limit=100, page=34949).track) == 100
     [user.getTopAlbums(user=_, limit=limit, page=page) for _ in usernames]
-    [user.getTopAlbums(user=usernames[0], period=e, limit=limit, page=page) for e in Period]
+    [user.getTopAlbums(user=usernames[0], period=e, limit=limit, page=page) for e in Type.period]
+    assert len(user.getTopAlbums(limit=100, page=157).album) == 100
     [user.getTopArtists(user=_, limit=limit, page=page) for _ in usernames]
-    [user.getTopArtists(user=usernames[0], period=e, limit=limit, page=page) for e in Period]
+    [user.getTopArtists(user=usernames[0], period=e, limit=limit, page=page) for e in Type.period]
+    assert len(user.getTopArtists(limit=100, page=50).artist) == 100
     [user.getTopTags(user=_, limit=limit) for _ in usernames]
     [user.getTopTracks(user=_, limit=limit, page=page) for _ in usernames]
-    [user.getTopTracks(user=usernames[0], period=e, limit=limit, page=page) for e in Period]
+    assert len(user.getTopTracks(period='overall', limit=100, page=743).track) == 100
+    [user.getTopTracks(user=usernames[0], period=e, limit=limit, page=page) for e in Type.period]
     [user.getWeeklyAlbumChart(user=_, FROM=FROM, TO=TO) for _ in usernames]
     [user.getWeeklyArtistChart(user=_, FROM=FROM, TO=TO) for _ in usernames]
     [user.getWeeklyChartList(user=_) for _ in usernames]
     [user.getWeeklyTrackChart(user=_, FROM=FROM, TO=TO) for _ in usernames]
     [user.getTrackScrobbles(user=_, artist=artists[0], track=tracks[0], TO=TO, limit=limit, page=page) for _ in usernames]
+    assert len(user.getTrackScrobbles(user='cdog215', artist='slayer', track='raining blood', limit=100, page=28).track) == 100
 
 def main():
     testAlbum()
