@@ -142,7 +142,7 @@ class album:
     '''album.search'''
 
     class Match(BaseModel):
-        name: str
+        name: typing.Optional[str] = None
         mbid: typing.Optional[uuid.UUID] = None
         url: pydantic.HttpUrl
         image: typing.List[Image]
@@ -155,9 +155,9 @@ class album:
     class Results(BaseModel):
         albummatches: album.Matches
         opensearch_Query: OpensearchQuery = pydantic.Field(alias='opensearch:Query')
-        opensearch_totalResults: str = pydantic.Field(alias='opensearch:totalResults')
-        opensearch_startIndex: str = pydantic.Field(alias='opensearch:startIndex')
-        opensearch_itemsPerPage: str = pydantic.Field(alias='opensearch:itemsPerPage')
+        opensearch_totalResults: int = pydantic.Field(alias='opensearch:totalResults')
+        opensearch_startIndex: int = pydantic.Field(alias='opensearch:startIndex')
+        opensearch_itemsPerPage: int = pydantic.Field(alias='opensearch:itemsPerPage')
         attr: Query = pydantic.Field(alias='@attr')
 
 
@@ -251,7 +251,7 @@ class artist:
     '''artist.getTopAlbums'''
 
     class Album(BaseModel):
-        name: str
+        name: typing.Optional[str] = None
         mbid: typing.Optional[uuid.UUID] = None
         url: pydantic.HttpUrl
         image: typing.List[Image]
@@ -301,9 +301,9 @@ class artist:
     class Results(BaseModel):
         artistmatches: artist.Matches
         opensearch_Query: OpensearchQuery = pydantic.Field(alias='opensearch:Query')
-        opensearch_totalResults: str = pydantic.Field(alias='opensearch:totalResults')
-        opensearch_startIndex: str = pydantic.Field(alias='opensearch:startIndex')
-        opensearch_itemsPerPage: str = pydantic.Field(alias='opensearch:itemsPerPage')
+        opensearch_totalResults: int = pydantic.Field(alias='opensearch:totalResults')
+        opensearch_startIndex: int = pydantic.Field(alias='opensearch:startIndex')
+        opensearch_itemsPerPage: int = pydantic.Field(alias='opensearch:itemsPerPage')
         attr: Query = pydantic.Field(alias='@attr')
 
 
@@ -685,9 +685,9 @@ class track:
     class Results(BaseModel):
         trackmatches: track.Matches
         opensearch_Query: OpensearchQuery = pydantic.Field(alias='opensearch:Query')
-        opensearch_totalResults: str = pydantic.Field(alias='opensearch:totalResults')
-        opensearch_startIndex: str = pydantic.Field(alias='opensearch:startIndex')
-        opensearch_itemsPerPage: str = pydantic.Field(alias='opensearch:itemsPerPage')
+        opensearch_totalResults: int = pydantic.Field(alias='opensearch:totalResults')
+        opensearch_startIndex: int = pydantic.Field(alias='opensearch:startIndex')
+        opensearch_itemsPerPage: int = pydantic.Field(alias='opensearch:itemsPerPage')
         attr: Query = pydantic.Field(alias='@attr') # '@attr' seems to be always empty (https://lastfm-docs.github.io/api-docs/track/search/#examples)
 
     '''track.updateNowPlaying'''
