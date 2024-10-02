@@ -13,7 +13,7 @@ from api.models import common
 
 class Artist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     playcount: int

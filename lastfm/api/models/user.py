@@ -17,10 +17,10 @@ class Attr(common.BaseModel):
 
 class Friend(common.BaseModel):
     name: str
-    realname: typing.Optional[str]
+    realname: typing.Optional[str] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
-    country: typing.Optional[str]
+    country: typing.Optional[str] = None
     registered: common.Registered
     usertype: common.UserType = pydantic.Field(alias='type')
     subscriber: bool
@@ -39,10 +39,10 @@ class Friends(common.BaseModel):
 
 class User(common.BaseModel):
     name: str
-    realname: typing.Optional[str]
+    realname: typing.Optional[str] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
-    country: typing.Optional[str]
+    country: typing.Optional[str] = None
     gender: str
     age: int
     registered: common.Registered
@@ -61,7 +61,7 @@ class User(common.BaseModel):
 
 class Lovedtrack(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: common.Entity
@@ -88,22 +88,22 @@ class AttrTaggings(common.BaseModel):
 
 class PersonalTag(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     streamable: bool
 
 
 class PersonalTags(common.BaseModel):
-    artist: typing.Optional[typing.List[PersonalTag]]
-    album: typing.Optional[typing.List[PersonalTag]]
-    track: typing.Optional[typing.List[PersonalTag]]
+    artist: typing.Optional[typing.List[PersonalTag]] = None
+    album: typing.Optional[typing.List[PersonalTag]] = None
+    track: typing.Optional[typing.List[PersonalTag]] = None
 
 
 class Taggings(common.BaseModel):
-    artists: typing.Optional[PersonalTags]
-    albums: typing.Optional[PersonalTags]
-    tracks: typing.Optional[PersonalTags]
+    artists: typing.Optional[PersonalTags] = None
+    albums: typing.Optional[PersonalTags] = None
+    tracks: typing.Optional[PersonalTags] = None
     attr: AttrTaggings = pydantic.Field(alias='@attr')
 
 
@@ -116,14 +116,14 @@ class AttrNowPlaying(common.BaseModel):
 
 class RecentTrack(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
-    date: typing.Optional[common.Date]
+    date: typing.Optional[common.Date] = None
     artist: common.Artist
     album: common.Album
     streamable: bool
-    attr: typing.Optional[AttrNowPlaying] = pydantic.Field(alias='@attr')
+    attr: typing.Optional[AttrNowPlaying] = pydantic.Field(alias='@attr', default=None)
 
 
 class ArtistExtended(common.BaseModel):
@@ -135,15 +135,15 @@ class ArtistExtended(common.BaseModel):
 
 class RecentTrackExtended(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
-    date: typing.Optional[common.Date]
+    date: typing.Optional[common.Date] = None
     artist: ArtistExtended
     album: common.Album
     streamable: bool
     loved: bool
-    attr: typing.Optional[AttrNowPlaying] = pydantic.Field(alias='@attr')
+    attr: typing.Optional[AttrNowPlaying] = pydantic.Field(alias='@attr', default=None)
 
 
 class Recenttracks(common.BaseModel):
@@ -156,7 +156,7 @@ class Recenttracks(common.BaseModel):
 
 class TopAlbum(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: common.Entity
@@ -174,7 +174,7 @@ class Topalbums(common.BaseModel):
 
 class TopArtist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     playcount: int
@@ -206,7 +206,7 @@ class Toptags(common.BaseModel):
 
 class TopTrack(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     duration: int
@@ -226,7 +226,7 @@ class Toptracks(common.BaseModel):
 
 class WeeklyAlbum(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     playcount: int
     artist: common.Artist
@@ -243,7 +243,7 @@ class Weeklyalbumchart(common.BaseModel):
 
 class WeeklyArtist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     playcount: int
     attr: common.Rank = pydantic.Field(alias='@attr')
@@ -258,7 +258,7 @@ class Weeklyartistchart(common.BaseModel):
 
 
 class WeeklyChart(common.BaseModel):
-    chart: typing.Optional[str] = pydantic.Field(alias='#text')
+    chart: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     fr: int = pydantic.Field(alias='from')
     to: int
 
@@ -273,7 +273,7 @@ class Weeklychartlist(common.BaseModel):
 
 class WeeklyTrack(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     playcount: int
@@ -284,6 +284,9 @@ class WeeklyTrack(common.BaseModel):
 class Weeklytrackchart(common.BaseModel):
     track: typing.List[WeeklyTrack]
     attr: common.AttrWeekly = pydantic.Field(alias='@attr')
+
+
+'''user.getTrackScrobbles'''
 
 
 class Trackscrobbles(common.BaseModel):

@@ -46,14 +46,14 @@ class BaseModel(pydantic.BaseModel, extra=pydantic.Extra.forbid):
 
 
 class AttrOpensearchQuery(BaseModel):
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     role: str
     startPage: int
-    searchTerms: typing.Optional[str]
+    searchTerms: typing.Optional[str] = None
 
 
 class AttrQuery(BaseModel):
-    query: typing.Optional[str] = pydantic.Field(alias='for')
+    query: typing.Optional[str] = pydantic.Field(alias='for', default=None)
 
 
 class AttrArtist(BaseModel):
@@ -94,23 +94,23 @@ class Date(BaseModel):
 
 class Entity(BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
 
 
 class Artist(BaseModel):
     name: str = pydantic.Field(alias='#text')
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
 
 
 class Album(BaseModel):
     name: typing.Optional[str] = pydantic.Field(alias='#text')
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
 
 
 class Image(BaseModel):
-    size: typing.Optional[ImageSize]
-    url: typing.Optional[pydantic.HttpUrl] = pydantic.Field(alias='#text')
+    size: typing.Optional[ImageSize] = None
+    url: typing.Optional[pydantic.HttpUrl] = pydantic.Field(alias='#text', default=None)
 
 
 # class Images(BaseModel):
@@ -155,7 +155,7 @@ class TopTag(BaseModel):
 
 
 class Wiki(BaseModel):
-    published: typing.Optional[datetime.datetime]
-    summary: typing.Optional[str]
-    content: typing.Optional[str]
+    published: typing.Optional[datetime.datetime] = None
+    summary: typing.Optional[str] = None
+    content: typing.Optional[str] = None
     _ = validateDateTime('published')

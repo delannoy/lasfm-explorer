@@ -21,7 +21,7 @@ class Attr(common.BaseModel):
 
 class Artist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     listeners: int
@@ -38,7 +38,7 @@ class Topartists(common.BaseModel):
 
 class Track(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     duration: int

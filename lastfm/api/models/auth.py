@@ -4,8 +4,10 @@ import uuid
 
 from api.models import common
 
+
 class Token(common.BaseModel):
     token: str
+
 
 class Session(common.BaseModel):
     name: str

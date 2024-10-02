@@ -33,7 +33,7 @@ class Corrections(common.BaseModel):
 
 
 class Link(common.BaseModel):
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     rel: str
     href: pydantic.HttpUrl
 
@@ -46,18 +46,18 @@ class Bio(common.BaseModel):
     links: Links
     published: datetime.datetime
     summary: str
-    content: typing.Optional[str]
+    content: typing.Optional[str] = None
     _ = common.validateDateTime('published')
 
 
 class Stats(common.BaseModel):
     listeners: int
     playcount: int
-    userplaycount: int
+    userplaycount: typing.Optional[int] = None
 
 
 class SimilarArtistInfo(common.BaseModel):
-    name: typing.Optional[str] # ugh https://www.last.fm/music/None
+    name: typing.Optional[str] = None # ugh! https://www.last.fm/music/None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
 
@@ -72,7 +72,7 @@ class ArtistTags(common.BaseModel):
 
 class Artist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     bio: Bio
@@ -88,7 +88,7 @@ class Artist(common.BaseModel):
 
 class SimilarArtist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     match: float
@@ -104,8 +104,8 @@ class Similarartists(common.BaseModel):
 
 
 class Tags(common.BaseModel):
-    tag: typing.Optional[typing.List[common.Tag]]
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    tag: typing.Optional[typing.List[common.Tag]] = None
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     attr: Attr = pydantic.Field(alias='@attr')
 
 
@@ -114,7 +114,7 @@ class Tags(common.BaseModel):
 
 class Album(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: common.Entity
@@ -139,7 +139,7 @@ class Toptags(common.BaseModel):
 
 class Track(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: common.Entity
@@ -150,7 +150,6 @@ class Track(common.BaseModel):
 
 
 class Toptracks(common.BaseModel):
-    '''artist.getTopTracks'''
     track: typing.List[Track]
     attr: common.AttrArtist = pydantic.Field(alias='@attr')
 
@@ -160,7 +159,7 @@ class Toptracks(common.BaseModel):
 
 class ArtistMatch(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     listeners: int

@@ -9,7 +9,7 @@ from api.models import common
 
 
 class Attr(common.BaseModel):
-    tag: typing.Optional[str]
+    tag: typing.Optional[str] = None
 
 
 '''tag.getInfo'''
@@ -41,7 +41,7 @@ class Similartags(common.BaseModel):
 
 class Album(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: common.Entity
@@ -58,7 +58,7 @@ class Albums(common.BaseModel):
 
 class Artist(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     streamable: bool
@@ -95,7 +95,7 @@ class Toptags(common.BaseModel):
 
 class Track(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     duration: int
@@ -113,7 +113,7 @@ class Tracks(common.BaseModel):
 
 
 class Weekly(common.BaseModel):
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     fr: int = pydantic.Field(alias='from')
     to: int
 

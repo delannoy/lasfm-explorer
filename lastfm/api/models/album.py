@@ -22,10 +22,10 @@ class TrackTags(common.BaseModel):
 
 class Track(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     artist: common.Entity
-    duration: typing.Optional[int]
+    duration: typing.Optional[int] = None
     streamable: common.Streamable
     attr: common.Rank = pydantic.Field(alias='@attr')
 
@@ -36,23 +36,24 @@ class Tracks(common.BaseModel):
 
 class Album(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: str
-    tracks: typing.Optional[Tracks]
-    tags: typing.Optional[TrackTags]
+    tracks: typing.Optional[Tracks] = None
+    tags: typing.Optional[TrackTags] = None
     listeners: int
     playcount: int
-    userplaycount: int
+    userplaycount: typing.Optional[int] = None
+    wiki: typing.Optional[common.Wiki] = None
 
 
 '''album.getTags'''
 
 
 class Tags(common.BaseModel):
-    tag: typing.Optional[typing.List[common.Tag]]
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    tag: typing.Optional[typing.List[common.Tag]] = None
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     attr: Attr = pydantic.Field(alias='@attr')
 
 
@@ -69,7 +70,7 @@ class Toptags(common.BaseModel):
 
 class AlbumMatch(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: str

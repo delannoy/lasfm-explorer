@@ -1,12 +1,31 @@
 #!/usr/bin/env python3
 
+import enum
 import typing
 import uuid
 
 import pydantic
 
-import api.errors
 from api.models import common
+
+
+class ScrobbleErrors(enum.IntEnum):
+    '''https://www.last.fm/api/show/track.scrobble'''
+
+    def __new__(cls, value: int, doc: str = ''):
+        '''override Enum.__new__ to take a doc argument'''
+        # [How can I attach documentation to members of a python enum?](https://stackoverflow.com/a/50473952)
+        self = int.__new__(cls, value)
+        self._value_ = value
+        self.__doc__ = doc
+        return self
+
+    OK = (0, '')
+    ARTIST_IGNORED = (1, "Artist was ignored")
+    TRACK_IGNORED = (2, "Track was ignored")
+    OLD_TIMESTAMP = (3, "Timestamp was too old")
+    NEW_TIMESTAMP = (4, "Timestamp was too new")
+    LIMIT_EXCEEDED = (5, "Daily scrobble limit exceeded")
 
 
 class Attr(common.BaseModel):
@@ -25,7 +44,7 @@ class AttrCorrection(common.BaseModel):
 
 class TrackCorrection(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     artist: common.Entity
 
@@ -49,7 +68,7 @@ class AttrPosition(common.BaseModel):
 class Album(common.BaseModel):
     title: str
     artist: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     attr: AttrPosition = pydantic.Field(alias='@attr')
@@ -61,18 +80,18 @@ class Tag(common.BaseModel):
 
 class Track(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     duration: int
     listeners: int
     playcount: int
-    userplaycount: int
-    userloved: bool
+    userplaycount: typing.Optional[int] = None
+    userloved: typing.Optional[bool] = None
     artist: common.Entity
     album: Album
     toptags: Tag
     streamable: common.Streamable
-    wiki: typing.Optional[common.Wiki]
+    wiki: typing.Optional[common.Wiki] = None
 
 
 '''track.getSimilar'''
@@ -84,10 +103,10 @@ class AttrTrack(common.BaseModel):
 
 class SimilarTrack(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
-    duration: typing.Optional[int]
+    duration: typing.Optional[int] = None
     playcount: int
     artist: common.Entity
     match: float
@@ -103,8 +122,8 @@ class Similartracks(common.BaseModel):
 
 
 class Tags(common.BaseModel):
-    tag: typing.Optional[typing.List[common.Tag]]
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    tag: typing.Optional[typing.List[common.Tag]] = None
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     attr: Attr = pydantic.Field(alias='@attr')
 
 
@@ -123,13 +142,14 @@ class AttrScrobble(common.BaseModel):
     ignored: int
     accepted: int
 
+
 class IgnoredMessage(common.BaseModel):
-    code: api.errors.ScrobbleErrors
-    text: typing.Optional[str] = pydantic.Field(alias='#text')
+    code: ScrobbleErrors # api.errors.ScrobbleErrors
+    text: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
 
 
 class Entity(common.BaseModel):
-    name: typing.Optional[str] = pydantic.Field(alias='#text')
+    name: typing.Optional[str] = pydantic.Field(alias='#text', default=None)
     corrected: bool
 
 
@@ -152,12 +172,12 @@ class Scrobbles(common.BaseModel):
 
 class TrackMatch(common.BaseModel):
     name: str
-    mbid: typing.Optional[uuid.UUID]
+    mbid: typing.Optional[uuid.UUID] = None
     url: pydantic.HttpUrl
     image: typing.List[common.Image]
     artist: str
     listeners: int
-    streamable: typing.Optional[bool]
+    streamable: typing.Optional[bool] = None
 
 
 class TrackMatches(common.BaseModel):
