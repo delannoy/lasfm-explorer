@@ -68,7 +68,7 @@ def getTopTracks(method: str, api_key: typ.UUID, tag: str, limit: int = 50, page
 
 @param.required
 @pydantic.validate_arguments
-def getWeeklyChartList(method: str, api_key: typ.UUID, tag: str) -> typ.response:
+def getWeeklyChartList(tag: str, method: str, api_key: typ.UUID) -> typ.response:
     '''Get a list of available charts for this tag, expressed as date ranges which can be sent to the chart services.
         tag     : Required : The tag name
         api_key : Required : A Last.fm API key.
