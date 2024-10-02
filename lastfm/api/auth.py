@@ -17,7 +17,7 @@ try:
     user = os.environ['LASTFM_USER']
     password = os.getenv('LASTFM_PASSWORD')
 except KeyError as error:
-    log.log.error('Please define you last.fm username as an environment variable:\nexport LASTFM_USER=your_username')
+    log.log.error('Please define your last.fm username as an environment variable:\nexport LASTFM_USER=your_username')
     raise error
 
 # [Create API account](https://www.last.fm/api/account/create)
@@ -41,7 +41,7 @@ def calculate_api_sig(params: typ.json, api_secret: typ.UUID = api_secret) -> ty
 
 @param.required
 @pydantic.validate_arguments
-def getMobileSession(method: str, api_key: typ.UUID, username: str, password: str, api_sig: typ.UUID = None, sk: str = sk) -> typ.response:
+def getMobileSession(method: str, api_key: typ.UUID, username: str, password: str, api_sig: typ.UUID = None) -> typ.response:
     '''Create a web service session for a user. Used for authenticating a user when the password can be inputted by the user. Accepts email address as well, so please use the username supplied in the output. Only suitable for standalone mobile devices. See the authentication how-to for more. You must use HTTPS and POST in order to use this method.
         username : Required : The last.fm username or email address.
         password : Required : The password in plain text.
